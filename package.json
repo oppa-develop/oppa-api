@@ -1,0 +1,42 @@
+{
+  "name": "nodejs-express-mysql-template",
+  "version": "1.0.0",
+  "description": "A nodejs template to make awesome REST API's",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jemd15/Nodejs-Express-Mysql-Template.git"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mysql",
+    "template"
+  ],
+  "author": "jemd15",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jemd15/Nodejs-Express-Mysql-Template/issues"
+  },
+  "homepage": "https://github.com/jemd15/Nodejs-Express-Mysql-Template#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-mysql-session": "^2.1.4",
+    "express-session": "^1.17.1",
+    "express-validator": "^6.6.1",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "^1.10.0",
+    "mysql": "^2.18.1",
+    "swagger-jsdoc": "^5.0.1",
+    "swagger-ui-express": "^4.1.4"
+  },
+  "devDependencies": {}
+}

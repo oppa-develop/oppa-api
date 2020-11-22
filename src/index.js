@@ -15,7 +15,7 @@ const app = express();
 app.set('port', process.env.port || 3000);
 const swaggerOptions = {
   swaggerDefinition: {
-    swagger: '2.0',
+    openapi: '3.0.0',
     info: {
       version: "1.0.0",
       title: "Oppa API",
@@ -27,16 +27,14 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://oppa.proyectosfit.cl',
+        url: 'http://oppa.proyectosfit.cl/api',
         description: 'Development server (online with test data).'
       },
       {
-        url: 'http://localhost:' + app.get('port'),
+        url: 'http://localhost:' + app.get('port') + '/api',
         description: 'Development server (local with test data).'
       }
-    ],
-    basePath: '/api',
-    schemes: ['http', 'https']
+    ]
   },
   apis: ['./src/routes/*.js']
 };

@@ -35,6 +35,46 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /users/{id}:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get user by id.
+ *    parameters:
+ *    - in: path
+ *      name: id
+ *      schema:
+ *        type: integer
+ *      required: true
+ *      description: Numeric ID of the user to get.
+ *    responses:
+ *      '200':
+ *        description: Returns a the user for the given id.
+ */
+router.get('/:id', /* verifyRole.admin, */ (req, res) => {
+  const { id } = req.params;
+
+  usersModel.getUserById(id)
+    .then(user => {
+      user.forEach(user => {
+        delete user['password']
+      });
+      res.status(200).json({
+        success: true,
+        message: `User with id ${user.id}.`,
+        user
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /users/new:
  *  post:
  *    tags:

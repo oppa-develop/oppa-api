@@ -23,10 +23,20 @@ const swaggerOptions = {
       license: {
         name: "MIT",
         url: "https://opensource.org/licenses/MIT"
-      } 
+      }
     },
+    servers: [
+      {
+        url: 'http://oppa.proyectosfit.cl',
+        description: 'Development server (online with test data).'
+      },
+      {
+        url: 'http://localhost:' + app.get('port'),
+        description: 'Development server (local with test data).'
+      }
+    ],
     basePath: '/api',
-    schemes: ['https']
+    schemes: ['http', 'https']
   },
   apis: ['./src/routes/*.js']
 };

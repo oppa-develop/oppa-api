@@ -8,3 +8,5 @@ usersModel.getUsers = () => {
 usersModel.createUser = (newUser) => {
   return pool.query('INSERT INTO user SET ?', [user]);
 }
+
+module.exports = usersModel;

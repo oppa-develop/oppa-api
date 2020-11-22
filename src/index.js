@@ -18,8 +18,8 @@ const swaggerOptions = {
     swagger: '2.0',
     info: {
       version: "1.0.0",
-      title: "Nodejs-Express-Mysql-Template",
-      description: "This is a nodejs template with express and mysql.",
+      title: "Oppa API",
+      description: "This is the documentation of the Oppa API REST.",
       license: {
         name: "MIT",
         url: "https://opensource.org/licenses/MIT"

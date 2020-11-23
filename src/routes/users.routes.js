@@ -158,6 +158,8 @@ router.post('/new',/*  verifyRole.teacher, */ async (req, res) => {
           success: false,
           message: newUser.sqlMessage
         });
+      } else if (newUser.code) {
+        console.log(newUser.code);
       } else {
 
         // if the user is not on the db we create it

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const usersModel = require('../models/users.model');
+const helpers = require('../libs/helpers');
 
 /**
  * @swagger
@@ -80,104 +81,75 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *    tags:
  *    - name: users
  *    description: Create a new user
- *    parameters:
- *      - in: body
- *        description: The user to create
- *        schema:
- *          type: object
- *          required: 
- *            - firstname
- *            - lastname
- *            - password
- *            - email
- *            - role
- *          properties:
- *            firstname:
- *              type: string
- *              example: John
- *            lastname:
- *              type: string
- *              example: Doe
- *            password:
- *              type: string
- *              example: $%&SDF$SD_F-Gs+ad*f45
- *            email:
- *              type: string
- *              example: j.doe@example.com
- *            role: 
- *              type: string
- *              example: companion
- *              enum:
- *                - elder
- *                - companion
- *                - server
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              firstname:
+ *                type: string
+ *                example: John
+ *              lastname:
+ *                type: string
+ *                example: Doe
+ *              email:
+ *                type: string
+ *                example: j.doe@example.com
+ *              phone:
+ *                type: string
+ *                example: "+56947381649"
+ *              rut:
+ *                type: string
+ *                example: 5.391.260-5
+ *              password:
+ *                type: string
+ *                example: $%&SDF$SD_F-Gs+ad*f45
+ *              gender:
+ *                type: string
+ *                example: male
+ *              img_url:
+ *                type: string
+ *                example: https://image.freepik.com/foto-gratis/sonriente-joven-gafas-sol-tomando-selfie-mostrando-pulgar-arriba-gesto_23-2148203116.jpg
+ *              roles_role_id: 
+ *                type: integer
+ *                example: 1
  *    responses:
  *      '200':
  *        description: Returns the new user.
- *        schema:
- *          type: object
- *          properties:
- *            success:
- *              type: boolen
- *              example: true
- *            message:
- *              type: string
- *              example: User created successfully.
- *            userData:
- *              type: object
- *              properties:
- *                id:
- *                  type: integer
- *                  example: 1
- *                firstname:
- *                  type: string
- *                  example: John
- *                lastname:
- *                  type: string
- *                  example: Doe
- *                email:
- *                  type: string
- *                  example: j.doe@example.com
- *                wallet:
- *                  type: integer
- *                  example: null
  *      '401':
  *        description: Error. Unauthorized action.
- *        schema:
- *          type: object
- *          properties:
- *            success:
- *              type: boolean
- *              example: false
- *            message:
- *              type: string
- *              example: Error. Unauthorized action. 
  */
 router.post('/new',/*  verifyRole.teacher, */ async (req, res) => {
   const {
     firstname,
-    lastName,
+    lastname,
     email,
+    phone,
+    rut,
     password,
-    role
+    gender,
+    img_url,
+    roles_role_id
   } = req.body;
   const user = {
     firstname,
-    lastName,
+    lastname,
     email,
+    phone,
+    rut,
     password,
-    role,
-    state: 'active'
+    gender,
+    img_url,
+    state: 'active',
+    roles_role_id
   }
 
-  console.log('Creando nuevo usuario');
+  console.log('Creando nuevo usuario', user);
   user.password = await helpers.encyptPassword(user.password);
 
   usersModel.createUser(user)
     .then(newUser => {
-      console.log({
-        newUser: newUser.code
-      })
 
       // check if the user exist on the db
       if (newUser.code == 'ER_DUP_ENTRY') {

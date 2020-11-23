@@ -27,12 +27,12 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://oppa.proyectosfit.cl/api',
-        description: 'Development server (online with test data).'
-      },
-      {
         url: 'http://localhost:' + app.get('port') + '/api',
         description: 'Development server (local with test data).'
+      },
+      {
+        url: 'http://oppa.proyectosfit.cl/api',
+        description: 'Development server (online with test data).'
       }
     ]
   },

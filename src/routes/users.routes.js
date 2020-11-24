@@ -50,7 +50,7 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *      description: Numeric ID of the user to get.
  *    responses:
  *      '200':
- *        description: Returns a the user for the given id.
+ *        description: Returns the user for the given id.
  */
 router.get('/:id', /* verifyRole.admin, */ (req, res) => {
   const { id } = req.params;
@@ -63,7 +63,7 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
       res.status(200).json({
         success: true,
         message: `User with id ${user.id}.`,
-        user
+        user: user[0]
       });
     })
     .catch(err => {

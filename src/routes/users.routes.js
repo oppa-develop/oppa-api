@@ -2,6 +2,29 @@ const express = require('express');
 const router = express.Router();
 const usersModel = require('../models/users.model');
 const helpers = require('../libs/helpers');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path')
+
+const storage = multer.diskStorage({
+  filename: (req, file, callback) => {
+    callback(null, file.originalname)
+  },
+  destination: path.join(__dirname, '../public/users-images'),
+  fileFilter: (req, file, callback) => {
+    const fileTypes = /jpeg|jpg|png|gif/;
+    const mimetype = fileTypes.test(file.mimetype);
+    const extname = fileTypes.test(path.extname(file.originalname));
+
+    if (mimetype && extname) callback(null, true)
+    callback('Error: File not valid.')
+  }
+})
+
+const userImages = multer({
+  storage,
+  destination: path.join(__dirname, 'public/users-images') 
+}).single('userImage'); // atributo name del input de imagen del frontend
 
 /**
  * @swagger
@@ -111,73 +134,61 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *              img_url:
  *                type: string
  *                example: https://image.freepik.com/foto-gratis/sonriente-joven-gafas-sol-tomando-selfie-mostrando-pulgar-arriba-gesto_23-2148203116.jpg
- *              roles_role_id: 
- *                type: integer
- *                example: 1
+ *              birthdate: 
+ *                type: datetime
+ *                example: 11-11-2020
  *    responses:
  *      '200':
  *        description: Returns the new user.
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new',/*  verifyRole.teacher, */ async (req, res) => {
+router.post('/new',/*  verifyRole.teacher, */ userImages, async (req, res) => {
   const {
     firstname,
     lastname,
-    email,
-    phone,
-    rut,
     password,
     gender,
-    img_url,
-    roles_role_id
+    rut,
+    email,
+    phone,
+    birthdate
   } = req.body;
+  const userImage = req.file
   const user = {
     firstname,
     lastname,
-    email,
-    phone,
-    rut,
     password,
     gender,
-    img_url,
-    state: 'active',
-    roles_role_id
+    rut,
+    email,
+    phone,
+    birthdate: new Date(birthdate),
+    created_at: new Date(),
+    img_url: `api/public/users-images/${userImage.filename}`,
+    state: 'active'
   }
 
-  console.log('Creando nuevo usuario', user);
+  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+  console.log(userImage);
+
+  console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
 
   usersModel.createUser(user)
     .then(newUser => {
-
-      // check if the user exist on the db
-      if (newUser.code == 'ER_DUP_ENTRY') {
-        console.log(newUser)
-        res.status(500).json({
-          success: false,
-          message: newUser.sqlMessage
-        });
-      } else if (newUser.code) {
-        console.log(newUser.code);
-      } else {
-
-        // if the user is not on the db we create it
-        user.user_id = newUser.insertId;
-        delete user['password'];
-        res.status(200).json({
-          success: true,
-          message: 'User created successfully.',
-          newUser: user
-        });
-      }
-
+      delete newUser['password'];
+      res.status(200).json({
+        success: true,
+        message: 'User created successfully.',
+        newUser
+      });
     })
     .catch(err => {
       console.log(err);
       res.status(500).json({
         success: false,
-        message: err.sqlMessage
+        message: err.code || err.message
       });
     });
 });

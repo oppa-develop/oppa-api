@@ -3,6 +3,28 @@ const router = express.Router();
 const usersModel = require('../models/users.model');
 const helpers = require('../libs/helpers');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path')
+
+const storage = multer.diskStorage({
+  filename: (req, file, callback) => {
+    callback(null, file.originalname)
+  },
+  destination: path.join(__dirname, '../public/users-images'),
+  fileFilter: (req, file, callback) => {
+    const fileTypes = /jpeg|jpg|png|gif/;
+    const mimetype = fileTypes.test(file.mimetype);
+    const extname = fileTypes.test(path.extname(file.originalname));
+
+    if (mimetype && extname) callback(null, true)
+    callback('Error: File not valid.')
+  }
+})
+
+const userImages = multer({
+  storage,
+  destination: path.join(__dirname, 'public/users-images') 
+}).single('userImage'); // atributo name del input de imagen del frontend
 
 /**
  * @swagger
@@ -121,7 +143,7 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new',/*  verifyRole.teacher, */ async (req, res) => {
+router.post('/new',/*  verifyRole.teacher, */ userImages, async (req, res) => {
   const {
     firstname,
     lastname,
@@ -132,6 +154,7 @@ router.post('/new',/*  verifyRole.teacher, */ async (req, res) => {
     phone,
     birthdate
   } = req.body;
+  const userImage = req.file
   const user = {
     firstname,
     lastname,
@@ -142,11 +165,12 @@ router.post('/new',/*  verifyRole.teacher, */ async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: 'asdasdasd',
+    img_url: `api/public/users-images/${userImage.filename}`,
     state: 'active'
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+  console.log(userImage);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);

@@ -153,3 +153,6 @@ dist
 
 # DataBase scripts
 **/*.sql
+
+# Public files
+**/public/

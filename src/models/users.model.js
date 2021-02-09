@@ -18,12 +18,9 @@ usersModel.createUser = async (newUser) => {
     await conn.beginTransaction();
     const [dupEntry] = await conn.query("SELECT * FROM users WHERE rut=? OR email=?", [[newUser.rut], [newUser.email]]);
     
-    console.log('dupEntry',dupEntry.length);
     if (dupEntry.length > 0) throw Error('Duplicate entry'); //verificamos que el rut o email no estén duplicados
 
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-
-    // aquí guardar la img y updatear al nuevo usario con la img_url
 
     let [adminData] = await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
     await conn.commit();

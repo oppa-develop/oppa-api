@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const usersModel = require('../models/users.model');
 const helpers = require('../libs/helpers');
+const jwt = require('jsonwebtoken');
 
 /**
  * @swagger
@@ -111,9 +112,9 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *              img_url:
  *                type: string
  *                example: https://image.freepik.com/foto-gratis/sonriente-joven-gafas-sol-tomando-selfie-mostrando-pulgar-arriba-gesto_23-2148203116.jpg
- *              roles_role_id: 
- *                type: integer
- *                example: 1
+ *              birthdate: 
+ *                type: datetime
+ *                example: 11-11-2020
  *    responses:
  *      '200':
  *        description: Returns the new user.
@@ -124,60 +125,46 @@ router.post('/new',/*  verifyRole.teacher, */ async (req, res) => {
   const {
     firstname,
     lastname,
-    email,
-    phone,
-    rut,
     password,
     gender,
-    img_url,
-    roles_role_id
+    rut,
+    email,
+    phone,
+    birthdate
   } = req.body;
   const user = {
     firstname,
     lastname,
-    email,
-    phone,
-    rut,
     password,
     gender,
-    img_url,
-    state: 'active',
-    roles_role_id
+    rut,
+    email,
+    phone,
+    birthdate: new Date(birthdate),
+    created_at: new Date(),
+    img_url: 'asdasdasd',
+    state: 'active'
   }
 
-  console.log('Creando nuevo usuario', user);
+  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+
+  console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
 
   usersModel.createUser(user)
     .then(newUser => {
-
-      // check if the user exist on the db
-      if (newUser.code == 'ER_DUP_ENTRY') {
-        console.log(newUser)
-        res.status(500).json({
-          success: false,
-          message: newUser.sqlMessage
-        });
-      } else if (newUser.code) {
-        console.log(newUser.code);
-      } else {
-
-        // if the user is not on the db we create it
-        user.user_id = newUser.insertId;
-        delete user['password'];
-        res.status(200).json({
-          success: true,
-          message: 'User created successfully.',
-          newUser: user
-        });
-      }
-
+      delete newUser['password'];
+      res.status(200).json({
+        success: true,
+        message: 'User created successfully.',
+        newUser
+      });
     })
     .catch(err => {
       console.log(err);
       res.status(500).json({
         success: false,
-        message: err.sqlMessage
+        message: err.code || err.message
       });
     });
 });

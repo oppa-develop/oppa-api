@@ -1,5 +1,4 @@
 const mysql = require('mysql2');
-const { promisify } = require('util');
 
 const pool = mysql.createPool({
   host: process.env.HOST,
@@ -16,7 +15,7 @@ pool.getConnection((err, connection) => {
     } else if (err.code === 'ER_CON_COUNT_ERROR') {
       console.error('DATABASE HAS TO MANY CONNECTIONS');
     } else if (err.code === 'ECONNREFUSED') {
-      console.error('DATABASE CONNECTION WAS REFUSED');
+      console.error('DATABASE CONNECTION WAS REFUSED', err);
     } else if (err.code === 'PROTOCOL_SEQUENCE_TIMEOUT') {
       console.error('DATABASE CONNECTION TIMEOUT');
     } else {
@@ -31,8 +30,6 @@ pool.getConnection((err, connection) => {
   return;
 });
 
-// Promisify Pool Querys
-pool.query = promisify(pool.query);
-pool.getConnection = promisify(pool.getConnection);
 
-module.exports = pool;
+
+module.exports = pool.promise();

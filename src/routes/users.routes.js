@@ -4,11 +4,12 @@ const usersModel = require('../models/users.model');
 const helpers = require('../libs/helpers');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const path = require('path')
+const path = require('path');
+const uuid = require('uuid');
 
 const storage = multer.diskStorage({
   filename: (req, file, callback) => {
-    callback(null, file.originalname)
+    callback(null, uuid() + path.extname(file.originalname).toLowerCase())
   },
   destination: path.join(__dirname, '../public/users-images'),
   fileFilter: (req, file, callback) => {

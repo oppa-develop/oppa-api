@@ -173,7 +173,7 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `http://oppa.proyectosfit.cl/api/public/users-images/${userImage.filename}`,
+    img_url: `api/public/users-images/${userImage.filename}`,
     state: 'active',
     email_verified: 'none'
   }

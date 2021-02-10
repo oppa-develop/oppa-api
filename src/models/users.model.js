@@ -22,7 +22,7 @@ usersModel.createUser = async (newUser) => {
 
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
 
-    let [adminData] = await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
+    let [adminData] = await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
     await conn.commit();
     newUser.user_id = userData.insertId
     newUser.admin_id = adminData.insertId

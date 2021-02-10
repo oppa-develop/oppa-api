@@ -9,10 +9,7 @@ const uuid = require('uuid');
 const fs = require('fs');
 
 const storage = multer.diskStorage({
-  filename: (req, file, callback) => {
-    callback(null, uuid.v4() + path.extname(file.originalname).toLowerCase())
-  },
-  destination: path.join(__dirname, '../public/users-images'),
+  destination: path.join(__dirname, `../public/users-images`),
   fileFilter: (req, file, callback) => {
     const fileTypes = /jpeg|jpg|png|gif/;
     const mimetype = fileTypes.test(file.mimetype);
@@ -20,12 +17,15 @@ const storage = multer.diskStorage({
 
     if (mimetype && extname) callback(null, true)
     callback('Error: File not valid.')
+  },
+  filename: (req, file, callback) => {
+    callback(null, uuid.v4() + path.extname(file.originalname).toLowerCase())
   }
 })
 
 const userImages = multer({
   storage,
-  destination: path.join(__dirname, 'public/users-images') 
+  // destination: path.join(__dirname, 'public/users-images') 
 }).single('userImage'); // atributo name del input de imagen del frontend
 
 // *** LA IMG SE GUARDA AL RECIBIR Y SE BORRA EN CASO DE ERROR ***
@@ -108,7 +108,7 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *  post:
  *    tags:
  *    - name: users
- *    description: Create a new user
+ *    description: Create a new user with role client
  *    requestBody:
  *      content:
  *        multipart/form-data:
@@ -136,9 +136,6 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *              gender:
  *                type: string
  *                example: male
- *              img_url:
- *                type: string
- *                example: https://image.freepik.com/foto-gratis/sonriente-joven-gafas-sol-tomando-selfie-mostrando-pulgar-arriba-gesto_23-2148203116.jpg
  *              birthdate: 
  *                type: datetime
  *                example: 11-11-2020
@@ -184,7 +181,7 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
 
-  usersModel.createUser(user)
+  usersModel.createClient(user)
     .then(newUser => {
       delete newUser['password'];
       res.status(200).json({
@@ -196,10 +193,220 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
     .catch(err => {
 
       // borramos la imagen del usuario
-      console.log(path.join(__dirname, '../public/users-images/' + userImage.filename));
       try {
-        fs.unlinkSync(path.join(__dirname, '../public/users-images/' + userImage.filename))
-        //file removed
+        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+      } catch(err) {
+        console.error(err)
+      }
+
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+
+});
+
+/**
+ * @swagger
+ * /users/new-provider:
+ *  post:
+ *    tags:
+ *    - name: users
+ *    description: Create a new user with role provider
+ *    requestBody:
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              firstname:
+ *                type: string
+ *                example: John
+ *              lastname:
+ *                type: string
+ *                example: Doe
+ *              email:
+ *                type: string
+ *                example: j.doe@example.com
+ *              phone:
+ *                type: string
+ *                example: "+56947381649"
+ *              rut:
+ *                type: string
+ *                example: 5.391.260-5
+ *              password:
+ *                type: string
+ *                example: $%&SDF$SD_F-Gs+ad*f45
+ *              gender:
+ *                type: string
+ *                example: male
+ *              birthdate: 
+ *                type: datetime
+ *                example: 11-11-2020
+ *              userImage:
+ *                type: string
+ *                format: binary
+ *    responses:
+ *      '200':
+ *        description: Returns the new user.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+  const {
+    firstname,
+    lastname,
+    password,
+    gender,
+    rut,
+    email,
+    phone,
+    birthdate
+  } = req.body;
+  const userImage = req.file
+  const user = {
+    firstname,
+    lastname,
+    password,
+    gender,
+    rut,
+    email,
+    phone,
+    birthdate: new Date(birthdate),
+    created_at: new Date(),
+    img_url: `api/public/providers-images/${userImage.filename}`,
+    state: 'active',
+    email_verified: 'none'
+  }
+
+  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+  console.log(userImage);
+
+  console.log('Creando nuevo usuario');
+  user.password = await helpers.encyptPassword(user.password);
+
+  usersModel.createProvider(user)
+    .then(newUser => {
+      delete newUser['password'];
+      res.status(200).json({
+        success: true,
+        message: 'User created successfully.',
+        newUser
+      });
+    })
+    .catch(err => {
+
+      // borramos la imagen del usuario
+      try {
+        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+      } catch(err) {
+        console.error(err)
+      }
+
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+
+});
+
+/**
+ * @swagger
+ * /users/new-admin:
+ *  post:
+ *    tags:
+ *    - name: users
+ *    description: Create a new user with role admin
+ *    requestBody:
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              firstname:
+ *                type: string
+ *                example: John
+ *              lastname:
+ *                type: string
+ *                example: Doe
+ *              email:
+ *                type: string
+ *                example: j.doe@example.com
+ *              phone:
+ *                type: string
+ *                example: "+56947381649"
+ *              rut:
+ *                type: string
+ *                example: 5.391.260-5
+ *              password:
+ *                type: string
+ *                example: $%&SDF$SD_F-Gs+ad*f45
+ *              gender:
+ *                type: string
+ *                example: male
+ *              birthdate: 
+ *                type: datetime
+ *                example: 11-11-2020
+ *              userImage:
+ *                type: string
+ *                format: binary
+ *    responses:
+ *      '200':
+ *        description: Returns the new user.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+  const {
+    firstname,
+    lastname,
+    password,
+    gender,
+    rut,
+    email,
+    phone,
+    birthdate
+  } = req.body;
+  const userImage = req.file
+  const user = {
+    firstname,
+    lastname,
+    password,
+    gender,
+    rut,
+    email,
+    phone,
+    birthdate: new Date(birthdate),
+    created_at: new Date(),
+    img_url: `api/public/users-images/${userImage.filename}`,
+    state: 'active',
+    email_verified: 'none'
+  }
+
+  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+  console.log(userImage);
+
+  console.log('Creando nuevo usuario');
+  user.password = await helpers.encyptPassword(user.password);
+
+  usersModel.createAdmin(user)
+    .then(newUser => {
+      delete newUser['password'];
+      res.status(200).json({
+        success: true,
+        message: 'User created successfully.',
+        newUser
+      });
+    })
+    .catch(err => {
+
+      // borramos la imagen del usuario
+      try {
+        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }

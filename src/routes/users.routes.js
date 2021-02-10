@@ -166,7 +166,8 @@ router.post('/new',/*  verifyRole.teacher, */ userImages, async (req, res) => {
     birthdate: new Date(birthdate),
     created_at: new Date(),
     img_url: `api/public/users-images/${userImage.filename}`,
-    state: 'active'
+    state: 'active',
+    email_verified: 'none'
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno

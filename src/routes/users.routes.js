@@ -28,6 +28,9 @@ const userImages = multer({
   destination: path.join(__dirname, 'public/users-images') 
 }).single('userImage'); // atributo name del input de imagen del frontend
 
+// *** LA IMG SE GUARDA AL RECIBIR Y SE BORRA EN CASO DE ERROR ***
+// *** LO CORRECTO SERÍA TOMAR LA IMG Y SUBIRLA A UN AWS S3 Y BORRARLA DE ESTE SERVIDOR EN CASO DE NO HABER ERROR ***
+
 /**
  * @swagger
  * /users/:
@@ -204,6 +207,7 @@ router.post('/new',/*  verifyRole.teacher, */ userImages, async (req, res) => {
         message: err.code || err.message
       });
     });
+
 });
 
 module.exports = router;

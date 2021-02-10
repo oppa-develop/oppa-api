@@ -6,10 +6,11 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const uuid = require('uuid');
+const fs = require('fs');
 
 const storage = multer.diskStorage({
   filename: (req, file, callback) => {
-    callback(null, uuid() + path.extname(file.originalname).toLowerCase())
+    callback(null, uuid.v4() + path.extname(file.originalname).toLowerCase())
   },
   destination: path.join(__dirname, '../public/users-images'),
   fileFilter: (req, file, callback) => {
@@ -187,6 +188,16 @@ router.post('/new',/*  verifyRole.teacher, */ userImages, async (req, res) => {
       });
     })
     .catch(err => {
+
+      // borramos la imagen del usuario
+      console.log(path.join(__dirname, '../public/users-images/' + userImage.filename));
+      try {
+        fs.unlinkSync(path.join(__dirname, '../public/users-images/' + userImage.filename))
+        //file removed
+      } catch(err) {
+        console.error(err)
+      }
+
       console.log(err);
       res.status(500).json({
         success: false,

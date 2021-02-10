@@ -1,12 +1,12 @@
 'use strict';
 
-require('dotenv').config({ path: require('find-config')('.env') });
 const express = require('express');
 var cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Initializations
 const app = express();

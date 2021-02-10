@@ -1,6 +1,6 @@
 'use strict';
 
-require('dotenv').config();
+require('dotenv').config({ path: require('find-config')('.env') });
 const express = require('express');
 var cors = require('cors');
 const morgan = require('morgan');

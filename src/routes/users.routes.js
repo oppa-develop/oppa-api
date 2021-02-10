@@ -104,14 +104,14 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /users/new:
+ * /users/new-client:
  *  post:
  *    tags:
  *    - name: users
  *    description: Create a new user
  *    requestBody:
  *      content:
- *        application/json:
+ *        multipart/form-data:
  *          schema:
  *            type: object
  *            properties:
@@ -142,13 +142,16 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *              birthdate: 
  *                type: datetime
  *                example: 11-11-2020
+ *              userImage:
+ *                type: string
+ *                format: binary
  *    responses:
  *      '200':
  *        description: Returns the new user.
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res) => {
   const {
     firstname,
     lastname,

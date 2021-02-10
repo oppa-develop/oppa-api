@@ -2,7 +2,7 @@ const pool = require('../libs/database');
 let usersModel = {};
 
 usersModel.getUsers = async () => {
-  const [rows] = await pool.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admin_id = user_id LEFT JOIN clients ON client_id = user_id LEFT JOIN providers ON provider_id = user_id;');
+  const [rows] = await pool.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id;');
   return rows
 }
 

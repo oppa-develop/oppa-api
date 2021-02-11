@@ -40,7 +40,7 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /users/{id}:
+ * /users/{user_id}:
  *  get:
  *    tags:
  *    - name: users
@@ -56,10 +56,10 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *      '200':
  *        description: Returns the user for the given id.
  */
-router.get('/:id', /* verifyRole.admin, */ (req, res) => {
-  const { id } = req.params;
+router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
+  const { user_id } = req.params;
 
-  usersModel.getUserById(id)
+  usersModel.getUserById(user_id)
     .then(user => {
       user.forEach(user => {
         delete user['password']
@@ -152,7 +152,6 @@ router.post('/new-client', async (req, res) => {
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
-  console.log(userImage);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -258,7 +257,6 @@ router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
-  console.log(userImage);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -364,7 +362,6 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
-  console.log(userImage);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);

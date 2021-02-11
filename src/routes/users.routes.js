@@ -1,35 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const usersModel = require('../models/users.model');
+const verifyRole = require('../libs/verifyRole');
 const helpers = require('../libs/helpers');
 const jwt = require('jsonwebtoken');
-const multer = require('multer');
 const path = require('path');
-const uuid = require('uuid');
 const fs = require('fs');
-
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, `../public/users-images`),
-  fileFilter: (req, file, callback) => {
-    const fileTypes = /jpeg|jpg|png|gif/;
-    const mimetype = fileTypes.test(file.mimetype);
-    const extname = fileTypes.test(path.extname(file.originalname));
-
-    if (mimetype && extname) callback(null, true)
-    callback('Error: File not valid.')
-  },
-  filename: (req, file, callback) => {
-    callback(null, uuid.v4() + path.extname(file.originalname).toLowerCase())
-  }
-})
-
-const userImages = multer({
-  storage,
-  // destination: path.join(__dirname, 'public/users-images') 
-}).single('userImage'); // atributo name del input de imagen del frontend
-
-// *** LA IMG SE GUARDA AL RECIBIR Y SE BORRA EN CASO DE ERROR ***
-// *** LO CORRECTO SERÍA TOMAR LA IMG Y SUBIRLA A UN AWS S3 Y BORRARLA DE ESTE SERVIDOR EN CASO DE NO HABER ERROR ***
 
 /**
  * @swagger
@@ -71,7 +47,7 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *    description: Get user by id.
  *    parameters:
  *    - in: path
- *      name: id
+ *      name: user_id
  *      schema:
  *        type: integer
  *      required: true
@@ -90,7 +66,7 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
       });
       res.status(200).json({
         success: true,
-        message: `User with id ${user.id}.`,
+        message: `User with id ${user[0].user_id}.`,
         user: user[0]
       });
     })
@@ -138,8 +114,8 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *                example: male
  *              birthdate: 
  *                type: datetime
- *                example: 11-11-2020
- *              userImage:
+ *                example: 2020-03-28
+ *              image:
  *                type: string
  *                format: binary
  *    responses:
@@ -148,7 +124,7 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+router.post('/new-client', async (req, res) => {
   const {
     firstname,
     lastname,
@@ -170,7 +146,7 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `api/public/users-images/${userImage.filename}`,
+    img_url: `api/public/images/${userImage.filename}`,
     state: 'active',
     email_verified: 'none'
   }
@@ -194,7 +170,7 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }
@@ -244,8 +220,8 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
  *                example: male
  *              birthdate: 
  *                type: datetime
- *                example: 11-11-2020
- *              userImage:
+ *                example: 2020-03-28
+ *              image:
  *                type: string
  *                format: binary
  *    responses:
@@ -254,7 +230,7 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
   const {
     firstname,
     lastname,
@@ -300,7 +276,7 @@ router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, r
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }
@@ -350,8 +326,8 @@ router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, r
  *                example: male
  *              birthdate: 
  *                type: datetime
- *                example: 11-11-2020
- *              userImage:
+ *                example: 2020-03-28
+ *              image:
  *                type: string
  *                format: binary
  *    responses:
@@ -360,7 +336,7 @@ router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, r
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
   const {
     firstname,
     lastname,
@@ -382,7 +358,7 @@ router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res)
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `api/public/users-images/${userImage.filename}`,
+    img_url: `api/public/images/${userImage.filename}`,
     state: 'active',
     email_verified: 'none'
   }
@@ -406,7 +382,7 @@ router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res)
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }

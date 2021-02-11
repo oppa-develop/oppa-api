@@ -33,11 +33,10 @@ usersModel.createClient = async (newUser) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    const [clientData] = await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
+    await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    newUser.user_id = userData.insertId
-    newUser.client_id = clientData.insertId
-    return newUser
+    return finalUserData
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;
@@ -55,11 +54,10 @@ usersModel.createProvider = async (newUser) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    const [providerData] = await conn.query("INSERT INTO providers SET ?", [{ users_user_id: userData.insertId }]);
+    await conn.query("INSERT INTO providers SET ?", [{ users_user_id: userData.insertId }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    newUser.user_id = userData.insertId
-    newUser.provider_id = providerData.insertId
-    return newUser
+    return finalUserData
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;
@@ -77,11 +75,10 @@ usersModel.createAdmin = async (newUser) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    const [adminData] = await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
+    await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    newUser.user_id = userData.insertId
-    newUser.admin_id = adminData.insertId
-    return newUser
+    return finalUserData
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

@@ -18,21 +18,21 @@ router.get('/', (req, res) => {
  *    tags:
  *    - name: auth
  *    description: To login users
- *    parameters:
- *      - in: body
- *        description: User credentials
- *        schema:
- *          type:
- *          required:
- *            - email
- *            - password
- *          properties:
- *            email:
- *              type: string
- *              example: j.doe@example.com
- *            password:
- *              type: string
- *              example: $%&SDF$SD_F-Gs+ad*f45
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              email:
+ *                type: string
+ *                example: test@example.com
+ *              password:
+ *                type: string
+ *                example: test1234
+ *            required:
+ *              - email
+ *              - password
  *    responses:
  *      '200':
  *        description: Returns the user data.
@@ -47,24 +47,8 @@ router.get('/', (req, res) => {
  *              example: login successful.
  *            userData:
  *              type: object
- *              properties:
- *                id:
- *                  type: integer
- *                  example: 1
- *                firstname: 
- *                  type: string
- *                  example: John
- *                lastname: 
- *                  type: string
- *                  example: Doe
- *                email: 
- *                  type: string
- *                  example: j.doe@example.com
- *                wallet: 
- *                  type: integer
- *                  example: 15000
- *      '404':
- *        description:
+ *      '401':
+ *        description: Unauthorized.
  *        schema:
  *          type: object
  *          properties:
@@ -85,8 +69,10 @@ router.post('/login', (req, res) => {
     password
   }
 
+  console.log(login);
   authModel.getUserByEmail(login.email)
     .then(userFound => {
+      // console.log(userFound[0]);
       if(userFound[0].state == 'active'){
         helpers.matchPassword(login.password, userFound[0].password)
         .then((success) => {
@@ -100,30 +86,23 @@ router.post('/login', (req, res) => {
               user: userFound[0]
             });
           }else {
-            res.status(401).json({
-              success: false,
-              message: 'Password wrong.'
-            });
+            throw Error('Password wrong.')
           }
         })
         .catch(err => {
-          console.error(err)
-          res.status(401).json({
-            success: false,
-            message: 'Email or password wrong.'
-          });
+          throw Error('Email or password wrong.')
         });
+      } else if (userFound[0].state == 'bloked') {
+        throw Error('User blocked by the Administrator.')
       } else {
-        res.status(401).json({
-          success: false,
-          message: 'User blocked by the Administrator.'
-        })
+        throw Error('Unknown error.')
       }
     })
     .catch(err => {
+      console.log(err);
       res.status(401).json({
         success: false,
-        message: 'Email or password wrong.'
+        message: err.message
       });
     });
 });

@@ -68,8 +68,7 @@ router.post('/login', (req, res) => {
     email,
     password
   }
-
-  console.log(login);
+  
   authModel.getUserByEmail(login.email)
     .then(userFound => {
       // console.log(userFound[0]);

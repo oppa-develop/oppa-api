@@ -40,6 +40,72 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /users/clients:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get all clients
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all clients.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/clients', /* verifyRole.admin, */ (req, res) => {
+  usersModel.getClients()
+    .then(clients => {
+      clients.forEach(user => {
+        delete user['password']
+      });
+      res.status(200).json({
+        success: true,
+        message: 'all clients.',
+        clients
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /users/providers:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get all providers
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all providers.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/providers', /* verifyRole.admin, */ (req, res) => {
+  usersModel.getProviders()
+    .then(providers => {
+      providers.forEach(user => {
+        delete user['password']
+      });
+      res.status(200).json({
+        success: true,
+        message: 'all providers.',
+        providers
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /users/{user_id}:
  *  get:
  *    tags:
@@ -55,20 +121,79 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *    responses:
  *      '200':
  *        description: Returns the user for the given id.
+ *      '404':
+ *        description: Error. User not found.
  */
 router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
   const { user_id } = req.params;
-
+  
   usersModel.getUserById(user_id)
     .then(user => {
-      user.forEach(user => {
-        delete user['password']
+      if (user.length == 0) {
+        res.status(404).json({
+          success: false,
+          message: `User with id ${user_id} not found.`,
+        });
+      } else {
+        user.forEach(user => {
+          delete user['password']
+        });
+        res.status(200).json({
+          success: true,
+          message: `User with id ${user_id}.`,
+          user
+        });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
       });
-      res.status(200).json({
-        success: true,
-        message: `User with id ${user[0].user_id}.`,
-        user: user[0]
-      });
+    });
+});
+
+/**
+ * @swagger
+ * /users/{client_id}/seniors:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get client's seniors by client_id.
+ *    parameters:
+ *    - in: path
+ *      name: client_id
+ *      schema:
+ *        type: integer
+ *        example: 2
+ *      required: true
+ *      description: Numeric ID of the user to get seniors.
+ *    responses:
+ *      '200':
+ *        description: Returns the a list of user's seniors for the given client_id.
+ *      '404':
+ *        description: Error. client_id not found.
+ */
+router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
+  const { client_id } = req.params;
+  
+  usersModel.getUserSeniors(client_id)
+    .then(seniors => {
+      if (seniors.length == 0) {
+        res.status(404).json({
+          success: false,
+          message: `The client with id ${client_id} has no seniors.`,
+        });
+      } else {
+        seniors.forEach(user => {
+          delete user['password']
+        });
+        res.status(200).json({
+          success: true,
+          message: `Seniors for the user with id ${client_id}.`,
+          seniors
+        });
+      }
     })
     .catch(err => {
       res.status(500).json({
@@ -388,6 +513,81 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
       res.status(500).json({
         success: false,
         message: err.code || err.message
+      });
+    });
+
+});
+
+/**
+ * @swagger
+ * /users/add-senior:
+ *  post:
+ *    tags:
+ *    - name: users
+ *    description: Set a senior to a client
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              user_client_id:
+ *                type: integer
+ *                example: 2
+ *              senior_client_id:
+ *                type: integer
+ *                example: 3
+ *    responses:
+ *      '200':
+ *        description: Returns a list of the client's seniors.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ *      '404':
+ *        description: Error. Client or senior does not exist.
+ *      '409':
+ *        description: Error. The senior could not have more than one user associated.
+ */
+router.post('/add-senior',/*  verifyRole.teacher, */ async (req, res) => {
+  const {
+    user_client_id,
+    senior_client_id,
+  } = req.body;
+  const addData = {
+    user_client_id,
+    senior_client_id,
+    created_at: new Date()
+  }
+
+  console.log('Asignando senior');
+
+  usersModel.addSenior(addData)
+    .then(clientSeniors => {
+      // delete newUser['password'];
+      res.status(200).json({
+        success: true,
+        message: 'User created successfully.',
+        clientSeniors
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      switch(err.code) {
+        case 'ER_NO_REFERENCED_ROW_2':
+          err.message = 'Client or senior does not exist.'
+          err.httpError = 404
+          break
+        case 'ER_DUP_ENTRY':
+          err.message = 'The senior could not have more than one user associated.'
+          err.httpError = 409
+          break
+        default:
+          err.message = err.code
+          err.httpError = 400
+          break
+      }
+      res.status(err.httpError).json({
+        success: false,
+        message: err.message
       });
     });
 

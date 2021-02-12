@@ -106,7 +106,7 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /services/super_category/{super_category_id}:
+ * /services/super-category/{super_category_id}:
  *  get:
  *    tags:
  *    - name: services
@@ -124,7 +124,7 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/super_category/:super_category_id', /* verifyRole.admin, */ (req, res) => {
+router.get('/super-category/:super_category_id', /* verifyRole.admin, */ (req, res) => {
   const { super_category_id } = req.params;
 
   servicesModel.getServicesBySuperCategoryId(super_category_id)
@@ -226,6 +226,80 @@ router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
     price,
     categories_category_id,
     isBasic
+  } = req.body
+  const serviceImage = req.file
+  const service = {
+    title,
+    description,
+    price,
+    categories_category_id,
+    img_url: `api/public/images/${serviceImage.filename}`,
+    created_at: new Date()
+  }
+
+  servicesModel.createService(service, isBasic)
+    .then(newService => {
+      res.status(200).json({
+        success: true,
+        message: 'Service created successfully',
+        newService
+      });
+    })
+    .catch(err => {
+
+      // borramos la imagen del servicio
+      try {
+        fs.unlinkSync(path.join(__dirname, `../public/images/${serviceImage.filename}`))
+      } catch(err) {
+        console.error(err)
+      }
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    });
+});
+
+/**
+ * @swagger
+ * /services/give-permission:
+ *  post:
+ *    tags:
+ *    - name: services
+ *    description: Give a provider permission to offer a service.
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              provider_id:
+ *                type: integer
+ *                example: 1
+ *              user_id:
+ *                type: integer
+ *                example: 1
+ *              services:
+ *                type: array
+ *                items:
+ *                  type: object
+ *                  properties:
+ *                    service_id:
+ *                      type: integer
+ *                      example: 1
+ *                    category_id:
+ *                      type: integer
+ *                      example: 1
+ *    responses:
+ *      '200':
+ *        description: Returns a list of services allowed for this provider
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
+  const {
+    provider_id,
+    services
   } = req.body
   const serviceImage = req.file
   const service = {

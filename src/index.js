@@ -75,6 +75,7 @@ app.use('/api/users', require('./routes/users.routes'));
 app.use('/api/services', require('./routes/services.routes'));
 app.use('/api/categories', require('./routes/categories.routes'));
 app.use('/api/superCategories', require('./routes/super-categories.routes'));
+app.use('/api/addresses', require('./routes/addresses.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));

@@ -41,23 +41,6 @@ servicesModel.getSuperCategoryById = async (id) => {
   return superCategory
 }
 
-servicesModel.createSuperCategory = async (newSuperCategory) => {
-  let conn = null;
-  try {
-    conn = await pool.getConnection();
-    await conn.beginTransaction();
-    const [row] = await conn.query('INSERT INTO super_categories SET ?', [newSuperCategory])
-    const [superCategory] = await conn.query('SELECT * FROM super_categories WHERE super_category_id=?', [row.insertId])
-    await conn.commit();
-    return superCategory
-  } catch (error) {
-    if (conn) await conn.rollback();
-    throw error;
-  } finally {
-    if (conn) await conn.release();
-  }
-}
-
 servicesModel.createService = async (newService, isBasic) => {
   let conn = null;
   try {
@@ -74,23 +57,6 @@ servicesModel.createService = async (newService, isBasic) => {
     const [finalServiceData] = await conn.query('SELECT * FROM services WHERE service_id=?', [row.insertId])
     await conn.commit();
     return finalServiceData
-  } catch (error) {
-    if (conn) await conn.rollback();
-    throw error;
-  } finally {
-    if (conn) await conn.release();
-  }
-}
-
-servicesModel.createCategory = async (newCategory) => {
-  let conn = null;
-  try {
-    conn = await pool.getConnection();
-    await conn.beginTransaction();
-    const [row] = await conn.query('INSERT INTO categories SET ?', [newCategory])
-    const [category] = await conn.query('SELECT * FROM categories WHERE category_id=?', [row.insertId])
-    await conn.commit();
-    return category
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

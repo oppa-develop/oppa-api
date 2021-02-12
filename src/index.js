@@ -73,6 +73,8 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/users.routes'));
 app.use('/api/services', require('./routes/services.routes'));
+app.use('/api/categories', require('./routes/categories.routes'));
+app.use('/api/superCategories', require('./routes/super-categories.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));

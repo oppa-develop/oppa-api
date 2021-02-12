@@ -16,6 +16,46 @@ servicesModel.getServicesByCategoryId = async (id) => {
   return services
 }
 
+servicesModel.givePermission = async (service) => {
+  let conn = null;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    await conn.query('INSER INTO providers_permited_services SET ?', [service]);
+    const [newServicePermitted] = await conn.query('SELECT * FROM services WHERE service_id = ?', [service.services_service_id])
+    await conn.commit();
+    return newServicePermitted
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
+}
+
+servicesModel.provideService = async (serviceToProvide) => {
+  let conn = null;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    conn [canProvide] = await conn.query('SELECT * FROM providers_has_services WHERE services_service_id = ?', [serviceToProvide.services_service_id])
+    let row
+    if (canProvide.length > 0) {
+      [row] = await conn.query('INSERT INTO providers_has_services SET ?', [serviceToProvide])
+    } else {
+      throw Error('Provider cannot provide the service with service_id = ' + serviceToProvide.services_service_id)
+    }
+    await conn.commit();
+    console.log(row);
+    return row
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
+}
+
 servicesModel.getServicesBySuperCategoryId = async (id) => {
   const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'catagory_title', categories.description 'catagory_description', categories.img_url as 'catagory_img_url', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_catagory_description' FROM services  INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE super_category_id=?`, [id]);
   return services

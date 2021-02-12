@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
+const multer = require('multer');
+const storage = require('./libs/multer')
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Initializations
@@ -44,6 +46,9 @@ const swaggerDocument = swaggerJsDoc(swaggerOptions);
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(multer({
+  storage
+}).single('image')) // atributo name del input de imagen del frontend
 
 // Headers
 app.use(cors());
@@ -54,6 +59,10 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/users.routes'));
+app.use('/api/services', require('./routes/services.routes'));
+app.use('/api/categories', require('./routes/categories.routes'));
+app.use('/api/superCategories', require('./routes/super-categories.routes'));
+app.use('/api/addresses', require('./routes/addresses.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));

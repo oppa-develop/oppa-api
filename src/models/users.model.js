@@ -2,13 +2,46 @@ const pool = require('../libs/database');
 let usersModel = {};
 
 usersModel.getUsers = async () => {
-  const [rows] = await pool.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id;');
-  return rows
+  const [users] = await pool.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id;');
+  return users
+}
+
+usersModel.getClients = async () => {
+  const [clients] = await pool.query("SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE client_id != 'null';");
+  return clients
+}
+
+usersModel.getProviders = async () => {
+  const [providers] = await pool.query("SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE provider_id != 'null';");
+  return providers
 }
 
 usersModel.getUserById = async (id) => {
-  const [rows] = await pool.query('SELECT * FROM users WHERE user_id=?;', [id]);
-  return rows
+  const [user] = await pool.query('SELECT * FROM users WHERE user_id=?;', [id]);
+  return user
+}
+
+usersModel.addSenior = async (addData) => {
+  let conn = null;
+  
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    await conn.query('INSERT INTO clients_has_clients SET ?;', [addData]);
+    const [clientSeniors] = await conn.query('SELECT users.* FROM oppa.clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [addData.user_client_id])
+    await conn.commit();
+    return clientSeniors
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
+}
+
+usersModel.getUserSeniors = async (user_client_id) => {
+  const [clientSeniors] = await pool.query('SELECT users.* FROM oppa.clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [user_client_id])
+  return clientSeniors
 }
 
 usersModel.checkDuplicates = async (rut, email) => {
@@ -33,11 +66,10 @@ usersModel.createClient = async (newUser) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    const [clientData] = await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
+    await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    newUser.user_id = userData.insertId
-    newUser.client_id = clientData.insertId
-    return newUser
+    return finalUserData
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;
@@ -55,11 +87,10 @@ usersModel.createProvider = async (newUser) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    const [providerData] = await conn.query("INSERT INTO providers SET ?", [{ users_user_id: userData.insertId }]);
+    await conn.query("INSERT INTO providers SET ?", [{ users_user_id: userData.insertId }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    newUser.user_id = userData.insertId
-    newUser.provider_id = providerData.insertId
-    return newUser
+    return finalUserData
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;
@@ -77,11 +108,10 @@ usersModel.createAdmin = async (newUser) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    const [adminData] = await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
+    await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    newUser.user_id = userData.insertId
-    newUser.admin_id = adminData.insertId
-    return newUser
+    return finalUserData
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

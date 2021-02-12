@@ -1,35 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const usersModel = require('../models/users.model');
+const verifyRole = require('../libs/verifyRole');
 const helpers = require('../libs/helpers');
 const jwt = require('jsonwebtoken');
-const multer = require('multer');
 const path = require('path');
-const uuid = require('uuid');
 const fs = require('fs');
-
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, `../public/users-images`),
-  fileFilter: (req, file, callback) => {
-    const fileTypes = /jpeg|jpg|png|gif/;
-    const mimetype = fileTypes.test(file.mimetype);
-    const extname = fileTypes.test(path.extname(file.originalname));
-
-    if (mimetype && extname) callback(null, true)
-    callback('Error: File not valid.')
-  },
-  filename: (req, file, callback) => {
-    callback(null, uuid.v4() + path.extname(file.originalname).toLowerCase())
-  }
-})
-
-const userImages = multer({
-  storage,
-  // destination: path.join(__dirname, 'public/users-images') 
-}).single('userImage'); // atributo name del input de imagen del frontend
-
-// *** LA IMG SE GUARDA AL RECIBIR Y SE BORRA EN CASO DE ERROR ***
-// *** LO CORRECTO SERÍA TOMAR LA IMG Y SUBIRLA A UN AWS S3 Y BORRARLA DE ESTE SERVIDOR EN CASO DE NO HABER ERROR ***
 
 /**
  * @swagger
@@ -64,14 +40,80 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /users/{id}:
+ * /users/clients:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get all clients
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all clients.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/clients', /* verifyRole.admin, */ (req, res) => {
+  usersModel.getClients()
+    .then(clients => {
+      clients.forEach(user => {
+        delete user['password']
+      });
+      res.status(200).json({
+        success: true,
+        message: 'all clients.',
+        clients
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /users/providers:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get all providers
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all providers.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/providers', /* verifyRole.admin, */ (req, res) => {
+  usersModel.getProviders()
+    .then(providers => {
+      providers.forEach(user => {
+        delete user['password']
+      });
+      res.status(200).json({
+        success: true,
+        message: 'all providers.',
+        providers
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /users/{user_id}:
  *  get:
  *    tags:
  *    - name: users
  *    description: Get user by id.
  *    parameters:
  *    - in: path
- *      name: id
+ *      name: user_id
  *      schema:
  *        type: integer
  *      required: true
@@ -79,20 +121,79 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *    responses:
  *      '200':
  *        description: Returns the user for the given id.
+ *      '404':
+ *        description: Error. User not found.
  */
-router.get('/:id', /* verifyRole.admin, */ (req, res) => {
-  const { id } = req.params;
-
-  usersModel.getUserById(id)
+router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
+  const { user_id } = req.params;
+  
+  usersModel.getUserById(user_id)
     .then(user => {
-      user.forEach(user => {
-        delete user['password']
+      if (user.length == 0) {
+        res.status(404).json({
+          success: false,
+          message: `User with id ${user_id} not found.`,
+        });
+      } else {
+        user.forEach(user => {
+          delete user['password']
+        });
+        res.status(200).json({
+          success: true,
+          message: `User with id ${user_id}.`,
+          user
+        });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
       });
-      res.status(200).json({
-        success: true,
-        message: `User with id ${user.id}.`,
-        user: user[0]
-      });
+    });
+});
+
+/**
+ * @swagger
+ * /users/{client_id}/seniors:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get client's seniors by client_id.
+ *    parameters:
+ *    - in: path
+ *      name: client_id
+ *      schema:
+ *        type: integer
+ *        example: 2
+ *      required: true
+ *      description: Numeric ID of the user to get seniors.
+ *    responses:
+ *      '200':
+ *        description: Returns the a list of user's seniors for the given client_id.
+ *      '404':
+ *        description: Error. client_id not found.
+ */
+router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
+  const { client_id } = req.params;
+  
+  usersModel.getUserSeniors(client_id)
+    .then(seniors => {
+      if (seniors.length == 0) {
+        res.status(404).json({
+          success: false,
+          message: `The client with id ${client_id} has no seniors.`,
+        });
+      } else {
+        seniors.forEach(user => {
+          delete user['password']
+        });
+        res.status(200).json({
+          success: true,
+          message: `Seniors for the user with id ${client_id}.`,
+          seniors
+        });
+      }
     })
     .catch(err => {
       res.status(500).json({
@@ -138,8 +239,8 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *                example: male
  *              birthdate: 
  *                type: datetime
- *                example: 11-11-2020
- *              userImage:
+ *                example: 2020-03-28
+ *              image:
  *                type: string
  *                format: binary
  *    responses:
@@ -148,7 +249,7 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+router.post('/new-client', async (req, res) => {
   const {
     firstname,
     lastname,
@@ -170,13 +271,12 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `api/public/users-images/${userImage.filename}`,
+    img_url: `api/public/images/${userImage.filename}`,
     state: 'active',
     email_verified: 'none'
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
-  console.log(userImage);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -194,7 +294,7 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }
@@ -244,8 +344,8 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
  *                example: male
  *              birthdate: 
  *                type: datetime
- *                example: 11-11-2020
- *              userImage:
+ *                example: 2020-03-28
+ *              image:
  *                type: string
  *                format: binary
  *    responses:
@@ -254,7 +354,7 @@ router.post('/new-client',/*  verifyRole.teacher, */ userImages, async (req, res
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
   const {
     firstname,
     lastname,
@@ -282,7 +382,6 @@ router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, r
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
-  console.log(userImage);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -300,7 +399,7 @@ router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, r
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }
@@ -350,8 +449,8 @@ router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, r
  *                example: male
  *              birthdate: 
  *                type: datetime
- *                example: 11-11-2020
- *              userImage:
+ *                example: 2020-03-28
+ *              image:
  *                type: string
  *                format: binary
  *    responses:
@@ -360,7 +459,7 @@ router.post('/new-provider',/*  verifyRole.teacher, */ userImages, async (req, r
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res) => {
+router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
   const {
     firstname,
     lastname,
@@ -382,13 +481,12 @@ router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res)
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `api/public/users-images/${userImage.filename}`,
+    img_url: `api/public/images/${userImage.filename}`,
     state: 'active',
     email_verified: 'none'
   }
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
-  console.log(userImage);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -406,7 +504,7 @@ router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res)
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/users-images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }
@@ -415,6 +513,81 @@ router.post('/new-admin',/*  verifyRole.teacher, */ userImages, async (req, res)
       res.status(500).json({
         success: false,
         message: err.code || err.message
+      });
+    });
+
+});
+
+/**
+ * @swagger
+ * /users/add-senior:
+ *  post:
+ *    tags:
+ *    - name: users
+ *    description: Set a senior to a client
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              user_client_id:
+ *                type: integer
+ *                example: 2
+ *              senior_client_id:
+ *                type: integer
+ *                example: 3
+ *    responses:
+ *      '200':
+ *        description: Returns a list of the client's seniors.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ *      '404':
+ *        description: Error. Client or senior does not exist.
+ *      '409':
+ *        description: Error. The senior could not have more than one user associated.
+ */
+router.post('/add-senior',/*  verifyRole.teacher, */ async (req, res) => {
+  const {
+    user_client_id,
+    senior_client_id,
+  } = req.body;
+  const addData = {
+    user_client_id,
+    senior_client_id,
+    created_at: new Date()
+  }
+
+  console.log('Asignando senior');
+
+  usersModel.addSenior(addData)
+    .then(clientSeniors => {
+      // delete newUser['password'];
+      res.status(200).json({
+        success: true,
+        message: 'User created successfully.',
+        clientSeniors
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      switch(err.code) {
+        case 'ER_NO_REFERENCED_ROW_2':
+          err.message = 'Client or senior does not exist.'
+          err.httpError = 404
+          break
+        case 'ER_DUP_ENTRY':
+          err.message = 'The senior could not have more than one user associated.'
+          err.httpError = 409
+          break
+        default:
+          err.message = err.code
+          err.httpError = 400
+          break
+      }
+      res.status(err.httpError).json({
+        success: false,
+        message: err.message
       });
     });
 

@@ -35,6 +35,34 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/basics:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all basic services
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all basic services.
+ */
+router.get('/basics', /* verifyRole.admin, */ (req, res) => {
+  servicesModel.getBasicServices()
+    .then(basicServices => {
+      res.status(200).json({
+        success: true,
+        message: 'all basic services.',
+        basicServices
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/category/{category_id}:
  *  get:
  *    tags:

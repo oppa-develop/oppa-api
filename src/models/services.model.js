@@ -6,6 +6,11 @@ servicesModel.getServices = async () => {
   return services
 }
 
+servicesModel.getBasicServices = async () => {
+  const [services] = await pool.query(`SELECT * FROM basic_services INNER JOIN services ON basic_services.services_service_id = services.service_id`);
+  return services
+}
+
 servicesModel.getServicesByCategoryId = async (id) => {
   const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'catagory_title', categories.description 'catagory_description', categories.img_url as 'catagory_img_url', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_catagory_description' FROM services  INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE category_id=?`, [id]);
   return services

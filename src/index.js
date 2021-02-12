@@ -7,24 +7,11 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const multer = require('multer');
+const storage = require('./libs/multer')
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Initializations
 const app = express();
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, `./public/images`),
-  fileFilter: (req, file, callback) => {
-    const fileTypes = /jpeg|jpg|png|gif/;
-    const mimetype = fileTypes.test(file.mimetype);
-    const extname = fileTypes.test(path.extname(file.originalname));
-
-    if (mimetype && extname) callback(null, true)
-    callback('Error: File not valid.')
-  },
-  filename: (req, file, callback) => {
-    callback(null, file.originalname.toLowerCase())
-  }
-})
 
 // Settings
 app.set('port', process.env.port || 3000);

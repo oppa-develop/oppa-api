@@ -26,3 +26,5 @@ verifyRole.admin = function (req, res, next) {
     });
   }
 }
+
+module.exports = verifyRole;

@@ -1,9 +1,9 @@
 const pool = require('../libs/database');
 let addressesModel = {};
 
-addressesModel.getAddressesByUserId = async (id) => {
-  const [rows] = await pool.query('SELECT * FROM addresses;');
-  return rows
+addressesModel.getAddressesByUserId = async (user_id) => {
+  const [addresses] = await pool.query('SELECT * FROM addresses WHERE users_user_id = ?;', [user_id]);
+  return addresses
 }
 
 addressesModel.createAddress = async (newAddress) => {

@@ -29,11 +29,19 @@ router.get('/user/:user_id', /* verifyRole.admin, */ (req, res) => {
 
   addressesModel.getAddressesByUserId(user_id)
     .then(addresses => {
-      res.status(200).json({
-        success: true,
-        message: `all addresses for user with id = ${user_id}.`,
-        addresses
-      });
+      console.log('addresses', addresses.length);
+      if (addresses.length == 0) {
+        res.status(200).json({
+          success: true,
+          message: `The user with id = ${user_id} does not have addresses.`
+        });
+      }else {
+        res.status(200).json({
+          success: true,
+          message: `all addresses for user with id = ${user_id}.`,
+          addresses
+        });
+      }
     })
     .catch(err => {
       res.status(500).json({

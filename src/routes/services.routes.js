@@ -3,7 +3,7 @@ const router = express.Router();
 const servicesModel = require('../models/services.model');
 const path = require('path');
 const fs = require('fs');
-const { body } = require('express-validator');
+const verifyRole = require('../libs/verifyRole');
 
 /**
  * @swagger
@@ -61,6 +61,45 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
       res.status(200).json({
         success: true,
         message: `services for the category_id = ${category_id}.`,
+        services
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /services/super_category/{super_category_id}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services for the given super_category_id
+ *    parameters:
+ *    - in: path
+ *      name: super_category_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *      description: Numeric ID of the category to get.
+ *    responses:
+ *      '200':
+ *        description: Returns the services for the given super_category_id.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/super_category/:super_category_id', /* verifyRole.admin, */ (req, res) => {
+  const { super_category_id } = req.params;
+
+  servicesModel.getServicesBySuperCategoryId(super_category_id)
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: `services for the super_category_id = ${super_category_id}.`,
         services
       });
     })
@@ -241,139 +280,6 @@ router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
         message: err.code || err.message
       })
     });
-})
-
-/**
- * @swagger
- * /services/new-super-category:
- *  post:
- *    tags:
- *    - name: services
- *    description: Create a new super category
- *    requestBody:
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            properties:
- *              title:
- *                type: string
- *                example: Servicio de Acompañamiento
- *              description:
- *                type: string
- *                example: Servicios que se realizan en una locación diferente al domicilio del usuario
- *    responses:
- *      '200':
- *        description: Returns the new super category.
- *      '401':
- *        description: Error. Unauthorized action.
- */
-router.post('/new-super-category', async (req, res) => {
-  const {
-    title,
-    description
-  } = req.body
-  const superCategory = {
-    title,
-    description
-  }
-
-  servicesModel.createSuperCategory(superCategory)
-    .then(newSuperCategory => {
-      res.status(200).json({
-        success: true,
-        message: 'Super category created successfully.',
-        newSuperCategory
-      });
-    })
-    .catch(err => {
-      res.status(500).json({
-        success: false,
-        message: err.code || err.message
-      });
-    });
-})
-
-/**
- * @swagger
- * /services/new-category:
- *  post:
- *    tags:
- *    - name: services
- *    description: Create a new category
- *    requestBody:
- *      content:
- *        multipart/form-data:
- *          schema:
- *            type: object
- *            properties:
- *              title:
- *                type: string
- *                example: Peluquería
- *              description:
- *                type: string
- *                example: Servicios que incluyen el corte, lavado, painado, etc. del cabello
- *              super_categories_super_category_id:
- *                type: number
- *                example: 1
- *              image:
- *                type: string
- *                format: binary
- *    responses:
- *      '200':
- *        description: Returns the new super category.
- *      '401':
- *        description: Error. Unauthorized action.
- */
-router.post('/new-category', async (req, res) => {
-  const {
-    title,
-    description,
-    super_categories_super_category_id
-  } = req.body
-  const categoryImage = req.file
-  const category = {
-    title,
-    description,
-    super_categories_super_category_id,
-    created_at: new Date()
-  }
-
-  servicesModel.createCategory(category)
-    .then(newCategory => {
-      
-      /* servicesModel.createCategory(newCategory.insertId)
-        .then(newCategory => {
-          res.status(200).json({
-            success: true,
-            message: 'Category created successfully.',
-            newCategory
-          });
-        })
-        .catch(err => {
-          throw err
-        }) */
-      res.status(200).json({
-        success: true,
-        message: 'Category created successfully.',
-        newCategory
-      });
-    })
-    .catch(err => {
-
-      // borramos la imagen de la categoria
-      try {
-        fs.unlinkSync(path.join(__dirname, `../public/images/${categoryImage.filename}`))
-      } catch(err) {
-        console.error(err)
-      }
-
-      console.log(err);
-      res.status(500).json({
-        success: false,
-        message: err.code || err.message
-      });
-    });
-})
+});
 
 module.exports = router;

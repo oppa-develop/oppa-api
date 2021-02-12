@@ -106,7 +106,7 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /services/super_category/{super_category_id}:
+ * /services/super-category/{super_category_id}:
  *  get:
  *    tags:
  *    - name: services
@@ -124,7 +124,7 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/super_category/:super_category_id', /* verifyRole.admin, */ (req, res) => {
+router.get('/super-category/:super_category_id', /* verifyRole.admin, */ (req, res) => {
   const { super_category_id } = req.params;
 
   servicesModel.getServicesBySuperCategoryId(super_category_id)
@@ -257,6 +257,155 @@ router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
         success: false,
         message: err.code || err.message
       })
+    });
+});
+
+/**
+ * @swagger
+ * /services/give-permission:
+ *  post:
+ *    tags:
+ *    - name: services
+ *    description: Give a provider permission to offer a service.
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              provider_id:
+ *                type: integer
+ *                example: 1
+ *              user_id:
+ *                type: integer
+ *                example: 1
+ *              services:
+ *                type: array
+ *                items:
+ *                  type: object
+ *                  properties:
+ *                    service_id:
+ *                      type: integer
+ *                      example: 1
+ *                    category_id:
+ *                      type: integer
+ *                      example: 1
+ *    responses:
+ *      '200':
+ *        description: Returns a list of services allowed for this provider
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
+  const {
+    service_id,
+    category_id,
+    provider_id,
+    user_id
+  } = req.body
+  const service = {
+    services_service_id: service_id,
+    services_categories_category_id: category_id,
+    providers_provider_id: provider_id,
+    providers_users_user_id: user_id,
+    created_at: new Date()
+  } 
+
+  servicesModel.givePermission(service)
+    .then(newServicePermitted => {
+      res.status(200).json({
+        success: true,
+        message: 'Service permited successfully',
+        newServicePermitted
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    });
+});
+
+/**
+ * @swagger
+ * /services/provide-service:
+ *  post:
+ *    tags:
+ *    - name: services
+ *    description: To offer a service.
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              provider_id:
+ *                type: integer
+ *                example: 1
+ *              user_id:
+ *                type: integer
+ *                example: 1
+ *              service_id:
+ *                type: integer
+ *                example: 1
+ *              workable:
+ *                type: string
+ *                example: lmxjvsd
+ *              state:
+ *                type: string
+ *                example: active
+ *              gender:
+ *                type: string
+ *                example: female
+ *              start:
+ *                type: string
+ *                example: "09:00:00"
+ *              end:
+ *                type: string
+ *                example: "18:00:00"
+ *    responses:
+ *      '200':
+ *        description: Returns the new service provided
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
+  const {
+    provider_id,
+    user_id,
+    service_id,
+    workable,
+    state,
+    gender,
+    start,
+    end
+  } = req.body
+  const serviceToProvide = {
+    providers_provider_id: provider_id,
+    providers_users_user_id: user_id,
+    services_service_id: service_id,
+    workable,
+    state,
+    gender,
+    start,
+    end,
+    created_at: new Date()
+  }
+
+  servicesModel.provideService(serviceToProvide)
+    .then(newServicePermitted => {
+      res.status(200).json({
+        success: true,
+        message: 'Service created successfully',
+        newServicePermitted
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
     });
 });
 

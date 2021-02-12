@@ -15,6 +15,8 @@ const verifyRole = require('../libs/verifyRole');
  *    responses:
  *      '200':
  *        description: Returns a list containing all services.
+ *      '401':
+ *        description: Error. Unauthorized action.
  */
 router.get('/', /* verifyRole.admin, */ (req, res) => {
   servicesModel.getServices()
@@ -43,6 +45,8 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *    responses:
  *      '200':
  *        description: Returns a list containing all basic services.
+ *      '401':
+ *        description: Error. Unauthorized action.
  */
 router.get('/basics', /* verifyRole.admin, */ (req, res) => {
   servicesModel.getBasicServices()
@@ -156,6 +160,8 @@ router.get('/super_category/:super_category_id', /* verifyRole.admin, */ (req, r
  *    responses:
  *      '200':
  *        description: Returns the service for the given id.
+ *      '401':
+ *        description: Error. Unauthorized action.
  */
 router.get('/:id', /* verifyRole.admin, */ (req, res) => {
   const { id } = req.params;

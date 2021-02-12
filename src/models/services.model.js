@@ -7,8 +7,8 @@ servicesModel.getServices = async () => {
 }
 
 servicesModel.getBasicServices = async () => {
-  const [services] = await pool.query(`SELECT * FROM basic_services INNER JOIN services ON basic_services.services_service_id = services.service_id`);
-  return services
+  const [basicServices] = await pool.query(`SELECT * FROM services WHERE isBasic = 1`);
+  return basicServices
 }
 
 servicesModel.getServicesByCategoryId = async (id) => {

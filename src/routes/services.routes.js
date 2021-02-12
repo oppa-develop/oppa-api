@@ -113,62 +113,6 @@ router.get('/super_category/:super_category_id', /* verifyRole.admin, */ (req, r
 
 /**
  * @swagger
- * /services/categories:
- *  get:
- *    tags:
- *    - name: services
- *    description: Get all categories
- *    responses:
- *      '200':
- *        description: Returns a list containing all categories.
- */
-router.get('/categories', /* verifyRole.admin, */ (req, res) => {
-  servicesModel.getServicesCategories()
-    .then(categories => {
-      res.status(200).json({
-        success: true,
-        message: 'all categories.',
-        categories
-      });
-    })
-    .catch(err => {
-      res.status(500).json({
-        success: false,
-        message: err.message
-      });
-    });
-});
-
-/**
- * @swagger
- * /services/super-categories:
- *  get:
- *    tags:
- *    - name: services
- *    description: Get all super categories
- *    responses:
- *      '200':
- *        description: Returns a list containing all super categories.
- */
-router.get('/super-categories', /* verifyRole.admin, */ (req, res) => {
-  servicesModel.getServicesSuperCategories()
-    .then(superCategories => {
-      res.status(200).json({
-        success: true,
-        message: 'all super categories.',
-        superCategories
-      });
-    })
-    .catch(err => {
-      res.status(500).json({
-        success: false,
-        message: err.message
-      });
-    });
-});
-
-/**
- * @swagger
  * /services/{id}:
  *  get:
  *    tags:

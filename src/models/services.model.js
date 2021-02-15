@@ -33,20 +33,19 @@ servicesModel.givePermission = async (service) => {
   }
 }
 
-servicesModel.provideService = async (serviceToProvide) => {
+servicesModel.provideService = async (serviceToProvide, locationToProvide) => {
   let conn = null;
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     conn [canProvide] = await conn.query('SELECT * FROM providers_has_services WHERE services_service_id = ?', [serviceToProvide.services_service_id])
-    let row
     if (canProvide.length > 0) {
-      [row] = await conn.query('INSERT INTO providers_has_services SET ?', [serviceToProvide])
+      [row] = await conn.query('INSERT INTO providers_has_services SET ?', [serviceToProvide]);
+      [location] = await conn.query("INSERT INTO locations SET ?", [locationToProvide]);
     } else {
       throw Error('Provider cannot provide the service with service_id = ' + serviceToProvide.services_service_id)
     }
     await conn.commit();
-    console.log(row);
     return row
   } catch (error) {
     if (conn) await conn.rollback();

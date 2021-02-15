@@ -379,7 +379,9 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
     state,
     gender,
     start,
-    end
+    end,
+    districts,
+    region
   } = req.body
   const serviceToProvide = {
     providers_provider_id: provider_id,
@@ -392,8 +394,19 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
     end,
     created_at: new Date()
   }
+  const locationToProvide = [];
 
-  servicesModel.provideService(serviceToProvide)
+  districts.forEach(district => {
+    locationToProvide.push({
+      district,
+      region,
+      providers_has_services_providers_provider_id: provider_id,
+      providers_has_services_providers_users_user_id: user_id,
+      providers_has_services_services_service_id: service_id
+    })
+  });
+
+  servicesModel.provideService(serviceToProvide, locationToProvide)
     .then(newServicePermitted => {
       res.status(200).json({
         success: true,

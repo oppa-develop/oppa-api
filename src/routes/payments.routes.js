@@ -59,7 +59,7 @@ router.post('/pay', (req,res) => {
    */
   wp.initTransaction({
     buyOrder: buyOrden,
-    sessionId: req.sessionId,
+    // sessionId: req.sessionId,
     returnURL: url + '/check',
     finalURL: url + '/voucher',
     amount: amount

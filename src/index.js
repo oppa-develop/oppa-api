@@ -71,9 +71,6 @@ app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/public', express.static(path.join(__dirname, './public')));
 
 // Starting the server
-/* app.listen(app.get('port'), () => {
-  console.log('Server on port', app.get('port'));
-}); */
 https.createServer({
   key: fs.readFileSync(path.join(__dirname, './ssl/oppa.key')),
   cert: fs.readFileSync(path.join(__dirname, './ssl/oppa.crt'))

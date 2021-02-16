@@ -9,6 +9,8 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const multer = require('multer');
 const storage = require('./libs/multer')
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const fs = require('fs');
+const https = require('https');
 
 // Initializations
 const app = express();
@@ -68,6 +70,12 @@ app.use('/api/addresses', require('./routes/addresses.routes'));
 app.use('/api/public', express.static(path.join(__dirname, './public')));
 
 // Starting the server
-app.listen(app.get('port'), () => {
+/* app.listen(app.get('port'), () => {
   console.log('Server on port', app.get('port'));
+}); */
+https.createServer({
+  key: fs.readFileSync(path.join(__dirname, './ssl/oppa.key')),
+  cert: fs.readFileSync(path.join(__dirname, './ssl/oppa.crt'))
+}, app).listen(app.get('port'), function(){
+  console.log("HTTPS server listening on port " + app.get('port') + "...");
 });

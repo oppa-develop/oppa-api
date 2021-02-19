@@ -1,19 +1,23 @@
 'use strict';
 
 const express = require('express');
-var cors = require('cors');
+const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const multer = require('multer');
 const storage = require('./libs/multer')
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({path: path.join(__dirname, '../.env')});
 const fs = require('fs');
 const https = require('https');
 
 // Initializations
 const app = express();
+const server = https.createServer({
+  key: fs.readFileSync(path.join(__dirname, './ssl/oppa.key'), 'utf8'),
+  cert: fs.readFileSync(path.join(__dirname, './ssl/oppa.crt'), 'utf8')
+}, app)
 
 // Settings
 app.set('port', process.env.port || 3000);
@@ -46,7 +50,9 @@ const swaggerDocument = swaggerJsDoc(swaggerOptions);
 
 // Middlewares
 app.use(morgan('dev'));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+  extended: true
+}));
 app.use(express.json());
 app.use(multer({
   storage
@@ -71,9 +77,30 @@ app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/public', express.static(path.join(__dirname, './public')));
 
 // Starting the server
-https.createServer({
-  key: fs.readFileSync(path.join(__dirname, './ssl/oppa.key')),
-  cert: fs.readFileSync(path.join(__dirname, './ssl/oppa.crt'))
-}, app).listen(app.get('port'), function(){
-  console.log("HTTPS server listening on port " + app.get('port') + "...");
+const io = require('socket.io')(server, {
+  cors: {
+    origin: "*",
+    methods: ["*"]
+  }
+});
+server.listen(app.get('port'), function () {
+  console.log("HTTPS server listening on port " + app.get('port'));
+});
+
+// Socket setup
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
+  socket.on('connectToChat', data => {
+    console.log('Connecting user to chat:', data.chat);
+    if (data.chat) socket.join(data.chat)
+  });
+  
+  socket.on('message', data => {
+    console.log('Message:', data.text);
+    socket.to(data.chat).broadcast.emit('message', data);
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
+  });
 });

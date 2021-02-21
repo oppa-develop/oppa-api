@@ -72,6 +72,7 @@ app.use('/api/categories', require('./routes/categories.routes'));
 app.use('/api/superCategories', require('./routes/super-categories.routes'));
 app.use('/api/addresses', require('./routes/addresses.routes'));
 app.use('/api/payments', require('./routes/payments.routes'));
+app.use('/api/wallets', require('./routes/wallets.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));

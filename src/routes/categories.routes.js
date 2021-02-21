@@ -74,57 +74,6 @@ router.get('/:category_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /categories/new-super-category:
- *  post:
- *    tags:
- *    - name: categories
- *    description: Create a new super category
- *    requestBody:
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            properties:
- *              title:
- *                type: string
- *                example: Servicio de Acompañamiento
- *              description:
- *                type: string
- *                example: Servicios que se realizan en una locación diferente al domicilio del usuario
- *    responses:
- *      '200':
- *        description: Returns the new super category.
- *      '401':
- *        description: Error. Unauthorized action.
- */
-router.post('/new-super-category', async (req, res) => {
-  const {
-    title,
-    description
-  } = req.body
-  const superCategory = {
-    title,
-    description
-  }
-
-  categoriesModel.createSuperCategory(superCategory)
-    .then(newSuperCategory => {
-      res.status(200).json({
-        success: true,
-        message: 'Super category created successfully.',
-        newSuperCategory
-      });
-    })
-    .catch(err => {
-      res.status(500).json({
-        success: false,
-        message: err.code || err.message
-      });
-    });
-});
-
-/**
- * @swagger
  * /categories/new-category:
  *  post:
  *    tags:

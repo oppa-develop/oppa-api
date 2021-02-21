@@ -156,3 +156,7 @@ dist
 
 # Public files
 **/public/
+
+# SSL files
+src/ssl/
+src/cert/

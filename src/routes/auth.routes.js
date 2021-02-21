@@ -70,19 +70,19 @@ router.post('/login', (req, res) => {
   }
   
   authModel.getUserByEmail(login.email)
-    .then(userFound => {
-      // console.log(userFound[0]);
-      if(userFound[0].state == 'active'){
-        helpers.matchPassword(login.password, userFound[0].password)
+    .then((userFound) => {
+      console.log(userFound);
+      if(userFound.state == 'active'){
+        helpers.matchPassword(login.password, userFound.password)
         .then((success) => {
           if(success){
-            delete userFound[0].password;
+            delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
-            userFound[0].token = token;
+            userFound.token = token;
             res.status(200).json({
               success: true,
               message: 'Loggin success.',
-              user: userFound[0]
+              user: userFound
             });
           }else {
             throw Error('Password wrong.')

@@ -159,3 +159,4 @@ dist
 
 # SSL files
 src/ssl/
+src/cert/

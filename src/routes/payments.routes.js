@@ -46,7 +46,9 @@ router.post('/pay', (req,res) => {
   transactions = {};
   transactionsByToken = {};
   var buyOrden = Date.now();
-  var amount = req.body.amount;
+  const {
+    amount
+  } = req.body
   transactions[buyOrden] = {
     amount: amount
   };

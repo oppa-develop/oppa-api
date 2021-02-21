@@ -106,6 +106,45 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/super-category/{super_category_title}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services for the given super_category_title
+ *    parameters:
+ *    - in: path
+ *      name: super_category_title
+ *      schema:
+ *        type: string
+ *        example: Servicio a Domicilio
+ *      description: Title of the category to get.
+ *    responses:
+ *      '200':
+ *        description: Returns the services for the given super_category_title.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/super-category/:super_category_title', /* verifyRole.admin, */ (req, res) => {
+  const { super_category_title } = req.params;
+
+  servicesModel.getServicesBySuperCategoryTitle(super_category_title)
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: `services for the super category = ${super_category_title}.`,
+        services
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/super-category/{super_category_id}:
  *  get:
  *    tags:
@@ -133,6 +172,37 @@ router.get('/super-category/:super_category_id', /* verifyRole.admin, */ (req, r
         success: true,
         message: `services for the super_category_id = ${super_category_id}.`,
         services
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /services/super-categories:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get 5 services for all the super categories
+ *    responses:
+ *      '200':
+ *        description: Returns 5 services for all the super categories.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/super-categories', /* verifyRole.admin, */ (req, res) => {
+
+  servicesModel.getSuperCategoriesBestServices()
+    .then(superCategories => {
+      res.status(200).json({
+        success: true,
+        message: `Super categories with their services.`,
+        superCategories
       });
     })
     .catch(err => {
@@ -233,11 +303,12 @@ router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
     description,
     price,
     categories_category_id,
+    isBasic: isBasic ? 1:0,
     img_url: `api/public/images/${serviceImage.filename}`,
     created_at: new Date()
   }
 
-  servicesModel.createService(service, isBasic)
+  servicesModel.createService(service)
     .then(newService => {
       res.status(200).json({
         success: true,
@@ -253,9 +324,20 @@ router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
       } catch(err) {
         console.error(err)
       }
-      res.status(500).json({
+      let errMessage, errHttpCode;
+      switch(err.code) {
+        case 'ER_NO_REFERENCED_ROW_2':
+          errHttpCode = 400;
+          errMessage = 'The categories_category_id probably does not exist.'
+        break
+        default:
+          errHttpCode = 500;
+          errMessage = err.code || err.message
+        break
+      }
+      res.status(errHttpCode).json({
         success: false,
-        message: err.code || err.message
+        message: errMessage
       })
     });
 });
@@ -364,6 +446,13 @@ router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
  *              end:
  *                type: string
  *                example: "18:00:00"
+ *              districts:
+ *                type: array
+ *                items:
+ *                  type: string
+ *              region:
+ *                type: string
+ *                example: "Región Metropolitana"
  *    responses:
  *      '200':
  *        description: Returns the new service provided
@@ -397,13 +486,13 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
   const locationToProvide = [];
 
   districts.forEach(district => {
-    locationToProvide.push({
+    locationToProvide.push([
       district,
       region,
-      providers_has_services_providers_provider_id: provider_id,
-      providers_has_services_providers_users_user_id: user_id,
-      providers_has_services_services_service_id: service_id
-    })
+      provider_id,
+      user_id,
+      service_id
+    ]);
   });
 
   servicesModel.provideService(serviceToProvide, locationToProvide)
@@ -415,6 +504,7 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
       });
     })
     .catch(err => {
+      console.log(err.sqlMessage)
       res.status(500).json({
         success: false,
         message: err.code || err.message

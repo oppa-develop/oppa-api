@@ -10,6 +10,10 @@ usersModel.getClients = async () => {
   const [clients] = await pool.query("SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE client_id != 'null';");
   return clients
 }
+usersModel.getCreditByUserId = async (user_id) => {
+  const [credit] = await pool.query('SELECT total FROM wallet_movements WHERE users_user_id = ? ORDER BY created_at DESC LIMIT 1', [user_id]);
+  return credit[0]?.total || 0
+}
 
 usersModel.getProviders = async () => {
   const [providers] = await pool.query("SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE provider_id != 'null';");
@@ -69,7 +73,7 @@ usersModel.createClient = async (newUser) => {
     await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    return finalUserData
+    return finalUserData[0]
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;
@@ -90,7 +94,7 @@ usersModel.createProvider = async (newUser) => {
     await conn.query("INSERT INTO providers SET ?", [{ users_user_id: userData.insertId }]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    return finalUserData
+    return finalUserData[0]
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;
@@ -111,7 +115,7 @@ usersModel.createAdmin = async (newUser) => {
     await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
-    return finalUserData
+    return finalUserData[0]
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

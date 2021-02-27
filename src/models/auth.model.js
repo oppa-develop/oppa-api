@@ -3,6 +3,7 @@ const pool = require('../libs/database');
 let authModel = {};
 
 authModel.getClientByEmail = async (email) => {
+  console.log(email);
   let conn = null;
   try {
     conn = await pool.getConnection();

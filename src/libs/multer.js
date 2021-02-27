@@ -8,13 +8,17 @@ storage = multer.diskStorage({
   fileFilter: (req, file, callback) => {
     const fileTypes = /jpeg|jpg|png|gif/;
     const mimetype = fileTypes.test(file.mimetype);
-    const extname = fileTypes.test(path.extname(file.originalname));
+    const extname = req.body.image_ext;
 
     if (mimetype && extname) callback(null, true)
     callback('Error: File not valid.')
   },
   filename: (req, file, callback) => {
-    callback(null, file.originalname.toLowerCase())
+    /**
+     * el req de multer solo muestra los datos que vengan ANTES de la imagen,
+     * por lo que es recomendable mandar la imagen al final del JSON
+     */
+    callback(null, req.body.rut + '.' + req.body.image_ext);
   }
 });
 

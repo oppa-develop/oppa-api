@@ -38,6 +38,11 @@ servicesModel.givePermission = async (service) => {
   }
 }
 
+servicesModel.getServicesHistory = async (user_id) => {
+  const [services] = await pool.query('SELECT * FROM oppa.scheduled_services WHERE clients_users_user_id = ?;', [user_id]);
+  return services
+}
+
 servicesModel.getSuperCategoriesBestServices = async () => {
   let conn = null;
   let i = 0;
@@ -133,6 +138,12 @@ servicesModel.createService = async (newService) => {
   } finally {
     if (conn) await conn.release();
   }
+}
+
+servicesModel.getProvidersHasServices = async (service_id) => {
+  const [services] = await pool.query("SELECT providers_has_services.*, users.firstname, users.lastname FROM providers_has_services INNER JOIN users ON users.user_id = providers_users_user_id WHERE services_service_id = ? AND providers_has_services.state = 'active'", [service_id])
+  // const [services] = await pool.query("SELECT * FROM providers_has_services WHERE state = 'active'")
+  return services
 }
 
 module.exports = servicesModel;

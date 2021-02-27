@@ -37,6 +37,45 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/history/user/{user_id}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services that the user has schedule
+ *    parameters:
+ *    - in: path
+ *      name: user_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *      description: Numeric ID of the user to get services history.
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all services.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/history/user/:user_id', /* verifyRole.admin, */ (req, res) => {
+  const { user_id } = req.params;
+
+  servicesModel.getServicesHistory(user_id)
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: 'all services.',
+        services
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/basics:
  *  get:
  *    tags:
@@ -215,7 +254,7 @@ router.get('/super-categories', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /services/{id}:
+ * /services/{service_id}:
  *  get:
  *    tags:
  *    - name: services
@@ -233,10 +272,10 @@ router.get('/super-categories', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/:id', /* verifyRole.admin, */ (req, res) => {
-  const { id } = req.params;
+router.get('/:service_id', /* verifyRole.admin, */ (req, res) => {
+  const { service_id } = req.params;
 
-  servicesModel.getServicesById(id)
+  servicesModel.getServicesById(service_id)
     .then(service => {
       res.status(200).json({
         success: true,
@@ -250,6 +289,47 @@ router.get('/:id', /* verifyRole.admin, */ (req, res) => {
         message: err.message
       });
     });
+});
+
+/**
+ * @swagger
+ * /{service_id}/providers:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services availables to schedule
+ *    parameters:
+ *    - in: path
+ *    name: service_id
+ *    schema:
+ *      type: integer
+ *      example: 1
+ *    required: true
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all services availables to schedule.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/:service_id/providers', (req, res) => {
+  const { service_id } = req.params;
+
+  servicesModel.getProvidersHasServices(service_id)
+    .then(services => {
+      console.log(services);
+      res.status(200).json({
+        success: true,
+        message: 'Services',
+        services
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    })
 });
 
 /**
@@ -511,7 +591,6 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
       });
     });
 });
-
 
 
 module.exports = router;

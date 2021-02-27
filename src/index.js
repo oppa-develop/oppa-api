@@ -11,12 +11,13 @@ const storage = require('./libs/multer')
 require('dotenv').config({path: path.join(__dirname, '../.env')});
 const fs = require('fs');
 const https = require('https');
+const dayjs = require('dayjs');
 
 // Initializations
 const app = express();
 const server = https.createServer({
-  key: fs.readFileSync(path.join(__dirname, './ssl/oppa.key'), 'utf8'),
-  cert: fs.readFileSync(path.join(__dirname, './ssl/oppa.crt'), 'utf8')
+  key: fs.readFileSync(path.join(__dirname, '../cert/privkey1.pem'), 'utf8'),
+  cert: fs.readFileSync(path.join(__dirname, './ssl/fullchain1.pem'), 'utf8')
 }, app)
 
 // Settings
@@ -39,7 +40,7 @@ const swaggerOptions = {
         description: 'Development server (local with test data).'
       },
       {
-        url: 'http://oppa.proyectosfit.cl/api',
+        url: 'https://oppa.proyectosfit.cl/api',
         description: 'Development server (online with test data).'
       }
     ]
@@ -89,6 +90,8 @@ server.listen(app.get('port'), function () {
 });
 
 // Socket setup
+
+const servicesModel = require('./models/services.model');
 io.on('connection', (socket) => {
   console.log('User connected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
   socket.on('connectToChat', data => {
@@ -99,6 +102,34 @@ io.on('connection', (socket) => {
   socket.on('message', data => {
     console.log('Message:', data.text);
     socket.to(data.chat).broadcast.emit('message', data);
+  });
+
+  socket.on('requestService', async data => {
+    console.log('usuario', data.receptor.user_id, 'solicita servicio:', data.service_id);
+    // await socket.join('requestService' + data.receptor.user_id)
+
+    // buscamos el servicio q le vamos a asignar
+    servicesModel.getProvidersHasServices(data.service_id)
+      .then(possibleServices => {
+        let possibleServicesFiltered = []
+        possibleServices.forEach(service => {
+          console.log('filtro 1', data.receptor.gender, service.gender, (data.receptor.gender == service.gender || service.gender == 'unisex'));
+          if ((data.receptor.gender == service.gender || service.gender == 'unisex') && (dayjs(data.hour).format('HH:mm:ss') > service.start && dayjs(data.hour).format('HH:mm:ss') < service.end)) {
+            possibleServicesFiltered.push(service)
+          }
+        });
+        if (possibleServicesFiltered.length == 0) {
+          console.log('No service found');
+          throw Error('No service found')
+        }
+        let finalService = possibleServicesFiltered[Math.floor(Math.random() * possibleServicesFiltered.length)]; // de todos los servicios q cumplen con las condiciones dadas, se selecciona uno al azar
+        socket.emit('requestService', finalService) // .to('requestService' + data.receptor.user_id) aún no funciona como debe
+      })
+      .catch(err => {
+        let error = new Object();
+        error.error = err.message;
+        socket.emit('requestService', error);
+      })
   });
   
   socket.on('disconnect', () => {

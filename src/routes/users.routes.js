@@ -155,6 +155,45 @@ router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /users/{user_id}/credit:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get credit from user for the given id.
+ *    parameters:
+ *    - in: path
+ *      name: user_id
+ *      schema:
+ *        type: integer
+ *      required: true
+ *      description: Numeric ID of the user to get credit.
+ *    responses:
+ *      '200':
+ *        description: Returns the credit of the user for the given id.
+ *      '404':
+ *        description: Error. User not found.
+ */
+router.get('/:user_id/credit', /* verifyRole.admin, */ (req, res) => {
+  const { user_id } = req.params;
+  
+  usersModel.getCreditByUserId(user_id)
+    .then(credit => {
+      res.status(200).json({
+        success: true,
+        message: `User with id ${user_id}.`,
+        credit
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /users/{client_id}/seniors:
  *  get:
  *    tags:
@@ -240,6 +279,9 @@ router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
  *              birthdate: 
  *                type: datetime
  *                example: 2020-03-28
+ *              image_ext: 
+ *                type: string
+ *                example: jpg
  *              image:
  *                type: string
  *                format: binary
@@ -250,6 +292,7 @@ router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.post('/new-client', async (req, res) => {
+  console.log('user.router', req.body)
   const {
     firstname,
     lastname,
@@ -271,12 +314,12 @@ router.post('/new-client', async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `api/public/images/${userImage.filename}`,
+    img_url: userImage ? `api/public/images/${userImage?.filename}`:null,
     state: 'active',
     email_verified: 'none'
   }
 
-  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);

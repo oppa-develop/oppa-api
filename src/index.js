@@ -17,7 +17,7 @@ const dayjs = require('dayjs');
 const app = express();
 const server = https.createServer({
   key: fs.readFileSync(path.join(__dirname, '../cert/privkey1.pem'), 'utf8'),
-  cert: fs.readFileSync(path.join(__dirname, './ssl/fullchain1.pem'), 'utf8')
+  cert: fs.readFileSync(path.join(__dirname, './cert/fullchain1.pem'), 'utf8')
 }, app)
 
 // Settings

@@ -90,7 +90,6 @@ const io = require('socket.io')(server, {
 });
 
 // Socket setup
-
 const servicesModel = require('./models/services.model');
 io.on('connection', (socket) => {
   console.log('User connected:', socket.handshake.query.firstname, socket.handshake.query.lastname);

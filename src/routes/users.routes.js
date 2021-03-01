@@ -275,7 +275,7 @@ router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
  *                example: $%&SDF$SD_F-Gs+ad*f45
  *              gender:
  *                type: string
- *                example: male
+ *                example: hombre
  *              birthdate: 
  *                type: datetime
  *                example: 2020-03-28
@@ -301,7 +301,8 @@ router.post('/new-client', async (req, res) => {
     rut,
     email,
     phone,
-    birthdate
+    birthdate,
+    image_ext
   } = req.body;
   const userImage = req.file
   const user = {
@@ -388,6 +389,9 @@ router.post('/new-client', async (req, res) => {
  *              birthdate: 
  *                type: datetime
  *                example: 2020-03-28
+ *              image_ext: 
+ *                type: string
+ *                example: jpg
  *              image:
  *                type: string
  *                format: binary
@@ -406,7 +410,8 @@ router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
     rut,
     email,
     phone,
-    birthdate
+    birthdate,
+    image_ext
   } = req.body;
   const userImage = req.file
   const user = {
@@ -493,6 +498,9 @@ router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
  *              birthdate: 
  *                type: datetime
  *                example: 2020-03-28
+ *              image_ext: 
+ *                type: string
+ *                example: jpg
  *              image:
  *                type: string
  *                format: binary
@@ -511,7 +519,8 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
     rut,
     email,
     phone,
-    birthdate
+    birthdate,
+    image_ext
   } = req.body;
   const userImage = req.file
   const user = {

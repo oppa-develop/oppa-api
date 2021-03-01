@@ -21,7 +21,7 @@ const app = express();
 }, app) */
 
 // Settings
-app.set('port', process.env.port || 3000);
+app.set('port', process.env.PORT || 3000);
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',

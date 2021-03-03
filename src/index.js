@@ -40,7 +40,7 @@ const swaggerOptions = {
         description: 'Development server (local with test data).'
       },
       {
-        url: 'https://oppa-api.herokuapp.com/api',
+        url: process.env.HOST + '/api',
         description: 'Development server (online with test data).'
       }
     ]

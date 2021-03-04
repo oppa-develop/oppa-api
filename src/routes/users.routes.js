@@ -180,7 +180,7 @@ router.get('/:user_id/credit', /* verifyRole.admin, */ (req, res) => {
     .then(credit => {
       res.status(200).json({
         success: true,
-        message: `User with id ${user_id}.`,
+        message: `Credits for user with id ${user_id}.`,
         credit
       });
     })

@@ -6,8 +6,6 @@ const morgan = require('morgan');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-const multer = require('multer');
-const storage = require('./libs/multer')
 require('dotenv').config({path: path.join(__dirname, '../.env')});
 const https = require('http');
 const fs = require('fs');
@@ -55,9 +53,9 @@ app.use(express.urlencoded({
   extended: true
 }));
 app.use(express.json());
-app.use(multer({
+/* app.use(multer({
   storage
-}).single('image')) // atributo name del input de imagen del frontend
+}).single('image')) // atributo name del input de imagen del frontend */
 
 // Headers
 app.use(cors());

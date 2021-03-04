@@ -11,7 +11,7 @@ usersModel.getClients = async () => {
   return clients
 }
 usersModel.getCreditByUserId = async (user_id) => {
-  const [credit] = await pool.query('SELECT total FROM wallet_movements WHERE users_user_id = ? ORDER BY created_at DESC LIMIT 1', [user_id]);
+  const [credit] = await pool.query('SELECT total FROM wallet_movements WHERE users_user_id = ? ORDER BY wallet_movements_id DESC LIMIT 1', [user_id]);
   return credit[0]?.total || 0
 }
 

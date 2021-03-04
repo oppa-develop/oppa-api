@@ -4,6 +4,31 @@ const servicesModel = require('../models/services.model');
 const path = require('path');
 const fs = require('fs');
 const verifyRole = require('../libs/verifyRole');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, `../public/images/services`),
+  fileFilter: (req, file, callback) => {
+    const fileTypes = /jpeg|jpg|png|gif/;
+    const mimetype = fileTypes.test(file.mimetype);
+    const extname = fileTypes.test(path.extname(file.originalname));
+
+    if (mimetype && extname) callback(null, true)
+    callback('Error: File not valid.')
+  },
+  filename: (req, file, callback) => {
+    /**
+     * el req de multer solo muestra los datos que vengan ANTES de la imagen,
+     * por lo que es recomendable mandar la imagen al final del JSON
+     */
+    console.log('services', {req});
+    callback(null, req.body.title.replace(/ /g, '_') + path.extname(file.originalname).toLowerCase());
+  }
+});
+
+const upload = multer({ 
+  storage
+}).single('image')
 
 /**
  * @swagger
@@ -369,7 +394,7 @@ router.get('/:service_id/providers', (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
+router.post('/new-service', upload, async (req, res) => {
   const {
     title,
     description,
@@ -384,7 +409,7 @@ router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
     price,
     categories_category_id,
     isBasic: isBasic ? 1:0,
-    img_url: `api/public/images/${serviceImage.filename}`,
+    img_url: `api/public/images/services/${serviceImage.filename}`,
     created_at: new Date()
   }
 
@@ -397,7 +422,7 @@ router.post('/new-service', /* verifyRole.admin, */ async (req, res) => {
       });
     })
     .catch(err => {
-
+      console.log(err);
       // borramos la imagen del servicio
       try {
         fs.unlinkSync(path.join(__dirname, `../public/images/${serviceImage.filename}`))

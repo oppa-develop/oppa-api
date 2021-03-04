@@ -129,7 +129,7 @@ servicesModel.createService = async (newService) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [row] = await conn.query('INSERT INTO services SET ?', [newService])
-    const [finalServiceData] = await conn.query('SELECT * FROM services WHERE service_id=?', [row[0].insertId])
+    const [finalServiceData] = await conn.query('SELECT * FROM services WHERE service_id=?', [row.insertId])
     await conn.commit();
     return finalServiceData
   } catch (error) {

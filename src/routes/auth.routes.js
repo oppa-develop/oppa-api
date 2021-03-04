@@ -89,6 +89,7 @@ router.post('/login-client', (req, res) => {
           }
         })
         .catch(err => {
+          console.log(err);
           throw Error('Email or password wrong.')
         });
       } else if (userFound[0].state == 'bloked') {

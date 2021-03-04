@@ -9,16 +9,16 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const multer = require('multer');
 const storage = require('./libs/multer')
 require('dotenv').config({path: path.join(__dirname, '../.env')});
+const https = require('http');
 const fs = require('fs');
-const https = require('https');
 const dayjs = require('dayjs');
 
 // Initializations
 const app = express();
-/* const server = https.createServer({
-  // key: fs.readFileSync(path.join(__dirname, '../cert/privkey1.pem'), 'utf8'),
-  // cert: fs.readFileSync(path.join(__dirname, '../cert/fullchain1.pem'), 'utf8')
-}, app) */
+const server = https.createServer({
+  key: fs.readFileSync(path.join(__dirname, './cert/privkey1.pem'), 'utf8'),
+  cert: fs.readFileSync(path.join(__dirname, './cert/fullchain1.pem'), 'utf8')
+}, app)
 
 // Settings
 app.set('port', process.env.PORT || 3000);
@@ -36,7 +36,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'https://localhost:' + app.get('port') + '/api',
+        url: 'http://localhost:' + app.get('port') + '/api',
         description: 'Development server (local with test data).'
       },
       {
@@ -79,7 +79,7 @@ app.use('/api/wallets', require('./routes/wallets.routes'));
 app.use('/api/public', express.static(path.join(__dirname, './public')));
 
 // Starting the server
-const server = app.listen(app.get('port'), () => {
+server.listen(app.get('port'), () => {
   console.log("HTTPS server listening on port " + app.get('port'));
 });
 const io = require('socket.io')(server, {

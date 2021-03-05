@@ -26,7 +26,7 @@ servicesModel.givePermission = async (service) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    await conn.query('INSER INTO providers_permited_services SET ?', [service]);
+    await conn.query('INSER INTO providers_permitted_services SET ?', [service]);
     const [newServicePermitted] = await conn.query('SELECT * FROM services WHERE service_id = ?', [service.services_service_id])
     await conn.commit();
     return newServicePermitted
@@ -144,6 +144,26 @@ servicesModel.getProvidersHasServices = async (service_id) => {
   const [services] = await pool.query("SELECT providers_has_services.*, users.firstname, users.lastname FROM providers_has_services INNER JOIN users ON users.user_id = providers_users_user_id WHERE services_service_id = ? AND providers_has_services.state = 'active'", [service_id])
   // const [services] = await pool.query("SELECT * FROM providers_has_services WHERE state = 'active'")
   return services
+}
+
+servicesModel.getServicesOfferedByUserId = async (user_id) => {
+  let i=0;
+  const [services] = await pool.query("SELECT * FROM providers_has_services INNER JOIN services ON services.service_id = providers_has_services.services_service_id WHERE providers_provider_id = ?;", [user_id]);
+  for await (let service of services) {
+    console.log(service.providers_provider_id,service.providers_users_user_id,service.services_service_id);
+    const [locations] = await pool.query('SELECT * FROM oppa.locations WHERE providers_has_services_providers_provider_id=? AND providers_has_services_providers_users_user_id=? AND providers_has_services_services_service_id=?;', [service.providers_provider_id,service.providers_users_user_id,service.services_service_id]);
+    services[i].locations = locations
+    i++
+    console.log(locations);
+  }
+
+  return services
+}
+
+servicesModel.changeOfferedServiceState = async (offeredService) => {
+  // detallar los ? desde el offeredService en la query
+  const [res] =  await pool.query('UPDATE providers_has_services SET state = ? WHERE ?', [offeredService])
+  return res
 }
 
 module.exports = servicesModel;

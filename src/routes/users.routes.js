@@ -6,6 +6,31 @@ const helpers = require('../libs/helpers');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, `../public/images/users`),
+  fileFilter: (req, file, callback) => {
+    const fileTypes = /jpeg|jpg|png|gif/;
+    const mimetype = fileTypes.test(file.mimetype);
+    const extname = req.body.image_ext;
+
+    if (mimetype && extname) callback(null, true)
+    callback('Error: File not valid.')
+  },
+  filename: (req, file, callback) => {
+    /**
+     * el req de multer solo muestra los datos que vengan ANTES de la imagen,
+     * por lo que es recomendable mandar la imagen al final del JSON
+     */
+    console.log('clients', file);
+    callback(null, req.body.rut + path.extname(file.originalname).toLowerCase());
+  }
+});
+
+const upload = multer({ 
+  storage
+}).single('image')
 
 /**
  * @swagger
@@ -315,7 +340,7 @@ router.post('/new-client', async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: userImage ? `api/public/images/${userImage?.filename}`:null,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
     state: 'active',
     email_verified: 'none'
   }
@@ -338,7 +363,7 @@ router.post('/new-client', async (req, res) => {
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }
@@ -401,7 +426,7 @@ router.post('/new-client', async (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
+router.post('/new-provider', upload, async (req, res) => {
   const {
     firstname,
     lastname,
@@ -424,10 +449,11 @@ router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `api/public/providers-images/${userImage.filename}`,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
     state: 'active',
     email_verified: 'none'
   }
+  console.log(userImage);
 
   user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
 
@@ -447,7 +473,7 @@ router.post('/new-provider',/*  verifyRole.teacher, */ async (req, res) => {
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }
@@ -533,7 +559,7 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: `api/public/images/${userImage.filename}`,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
     state: 'active',
     email_verified: 'none'
   }
@@ -556,7 +582,7 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
 
       // borramos la imagen del usuario
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/images/${userImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
       } catch(err) {
         console.error(err)
       }

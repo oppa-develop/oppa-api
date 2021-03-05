@@ -359,6 +359,46 @@ router.get('/:service_id/providers', (req, res) => {
 
 /**
  * @swagger
+ * /services/offered/provider/{provider_id}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services offered by provider_id
+ *    parameters:
+ *    - in: path
+ *    name: provider_id
+ *    schema:
+ *      type: integer
+ *      example: 2
+ *    required: true
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all services provided by user with the given provider_id.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/offered/provider/:provider_id', (req, res) => {
+  const { provider_id } = req.params;
+
+  servicesModel.getServicesOfferedByUserId(provider_id)
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: 'Services provided by user with provider_id: ' + provider_id,
+        services
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    })
+});
+
+/**
+ * @swagger
  * /services/new-service:
  *  post:
  *    tags:
@@ -502,7 +542,7 @@ router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
     .then(newServicePermitted => {
       res.status(200).json({
         success: true,
-        message: 'Service permited successfully',
+        message: 'Service permitted successfully',
         newServicePermitted
       });
     })
@@ -590,15 +630,25 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
   }
   const locationToProvide = [];
 
-  districts.forEach(district => {
+  if(districts){
+    districts.forEach(district => {
+      locationToProvide.push([
+        district,
+        region,
+        provider_id,
+        user_id,
+        service_id
+      ]);
+    });
+  } else {
     locationToProvide.push([
-      district,
+      null,
       region,
       provider_id,
       user_id,
       service_id
     ]);
-  });
+  }
 
   servicesModel.provideService(serviceToProvide, locationToProvide)
     .then(newServicePermitted => {
@@ -616,6 +666,37 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
       });
     });
 });
+
+router.patch('/offered/change-state', async (req, res) => {
+  const {
+    provider_id,
+    user_id,
+    service_id,
+    state
+  } = req.body
+  const offeredService = {
+    state,
+    provider_id,
+    user_id,
+    service_id
+  }
+
+  servicesModel.changeOfferedServiceState(offeredService)
+    .then(offeredService => {
+      res.status(200).json({
+        success: true,
+        message: 'Service created successfully',
+        offeredService
+      });
+    })
+    .catch(err => {
+      console.log(err.sqlMessage)
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+})
 
 
 module.exports = router;

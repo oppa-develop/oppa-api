@@ -73,15 +73,20 @@ servicesModel.provideService = async (serviceToProvide, locationToProvide) => {
     await conn.beginTransaction();
     const [isBasic] = await conn.query('SELECT isBasic FROM oppa.services WHERE service_id = ?;', [serviceToProvide.services_service_id]);
     const [canProvide] = await conn.query('SELECT * FROM providers_permitted_services WHERE services_service_id = ?', [serviceToProvide.services_service_id]);
-    console.log(locationToProvide);
     if (canProvide.length > 0 || isBasic[0].isBasic == 1) {
-      await conn.query('INSERT INTO providers_has_services SET ?', [serviceToProvide]);
-      await conn.query("INSERT INTO locations (district, region, providers_has_services_providers_provider_id, providers_has_services_providers_users_user_id, providers_has_services_services_service_id) VALUES ?", [locationToProvide]);
-      const [newServiceToProvide] = await conn.query('SELECT * FROM oppa.providers_has_services WHERE providers_provider_id=? AND providers_users_user_id=? AND services_service_id=?;', [serviceToProvide.providers_provider_id,serviceToProvide.providers_users_user_id,serviceToProvide.services_service_id]);
-      const [locations] = await conn.query('SELECT * FROM oppa.locations WHERE providers_has_services_providers_provider_id=? AND providers_has_services_providers_users_user_id=? AND providers_has_services_services_service_id=?;', [serviceToProvide.providers_provider_id,serviceToProvide.providers_users_user_id,serviceToProvide.services_service_id]);
-      newServiceToProvide[0].locations = locations;
+      const [newServiceProvided] = await conn.query('INSERT INTO provider_has_services SET ?', [serviceToProvide]);
+      // console.log('funcionó antes de locations', newServiceProvided);
+      for await (let location of locationToProvide) {
+        location.push(newServiceProvided.insertId)
+      }
+      console.log(conn.format("INSERT INTO locations (`district`, `region`, `provider_has_services_provider_has_services_id`) VALUES ?", [locationToProvide]))
+      await conn.query("INSERT INTO locations (`district`, `region`, `provider_has_services_provider_has_services_id`) VALUES ?", [locationToProvide]);
+      console.log('insertó locations');
+      // const [newServiceToProvide] = await conn.query('SELECT * FROM oppa.provider_has_services WHERE provider_has_services_id=?;', [newServiceProvided.insertId]);
+      // const [locations] = await conn.query('SELECT * FROM oppa.locations WHERE =?;', [serviceToProvide.providers_provider_id,serviceToProvide.providers_users_user_id,serviceToProvide.services_service_id]);
+      // newServiceToProvide[0].locations = locations;
       await conn.commit();
-      return newServiceToProvide
+      return newServiceProvided
     } else {
       throw Error('Provider cannot provide the service with service_id = ' + serviceToProvide.services_service_id)
     }
@@ -141,20 +146,18 @@ servicesModel.createService = async (newService) => {
 }
 
 servicesModel.getProvidersHasServices = async (service_id) => {
-  const [services] = await pool.query("SELECT providers_has_services.*, users.firstname, users.lastname FROM providers_has_services INNER JOIN users ON users.user_id = providers_users_user_id WHERE services_service_id = ? AND providers_has_services.state = 'active'", [service_id])
-  // const [services] = await pool.query("SELECT * FROM providers_has_services WHERE state = 'active'")
+  const [services] = await pool.query("SELECT provider_has_services.*, users.firstname, users.lastname FROM provider_has_services INNER JOIN users ON users.user_id = providers_users_user_id WHERE services_service_id = ? AND provider_has_services.state = 'active'", [service_id])
+  // const [services] = await pool.query("SELECT * FROM provider_has_services WHERE state = 'active'")
   return services
 }
 
 servicesModel.getServicesOfferedByUserId = async (user_id) => {
   let i=0;
-  const [services] = await pool.query("SELECT * FROM providers_has_services INNER JOIN services ON services.service_id = providers_has_services.services_service_id WHERE providers_provider_id = ?;", [user_id]);
+  const [services] = await pool.query("SELECT * FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id WHERE providers_provider_id = ?;", [user_id]);
   for await (let service of services) {
-    console.log(service.providers_provider_id,service.providers_users_user_id,service.services_service_id);
-    const [locations] = await pool.query('SELECT * FROM oppa.locations WHERE providers_has_services_providers_provider_id=? AND providers_has_services_providers_users_user_id=? AND providers_has_services_services_service_id=?;', [service.providers_provider_id,service.providers_users_user_id,service.services_service_id]);
+    const [locations] = await pool.query('SELECT * FROM oppa.locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
     services[i].locations = locations
     i++
-    console.log(locations);
   }
 
   return services
@@ -162,7 +165,7 @@ servicesModel.getServicesOfferedByUserId = async (user_id) => {
 
 servicesModel.changeOfferedServiceState = async (offeredService) => {
   // detallar los ? desde el offeredService en la query
-  const [res] =  await pool.query('UPDATE providers_has_services SET state = ? WHERE ?', [offeredService])
+  const [res] =  await pool.query('UPDATE provider_has_services SET state = ? WHERE ?', [offeredService])
   return res
 }
 

@@ -410,7 +410,7 @@ router.post('/new-client', async (req, res) => {
  *                example: $%&SDF$SD_F-Gs+ad*f45
  *              gender:
  *                type: string
- *                example: male
+ *                example: hombre
  *              birthdate: 
  *                type: datetime
  *                example: 2020-03-28
@@ -520,7 +520,7 @@ router.post('/new-provider', upload, async (req, res) => {
  *                example: $%&SDF$SD_F-Gs+ad*f45
  *              gender:
  *                type: string
- *                example: male
+ *                example: hombre
  *              birthdate: 
  *                type: datetime
  *                example: 2020-03-28

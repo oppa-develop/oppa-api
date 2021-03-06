@@ -576,6 +576,9 @@ router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
  *              service_id:
  *                type: integer
  *                example: 1
+ *              category_id:
+ *                type: integer
+ *                example: 1
  *              workable:
  *                type: string
  *                example: lmxjvsd
@@ -584,7 +587,7 @@ router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
  *                example: active
  *              gender:
  *                type: string
- *                example: female
+ *                example: mujer
  *              start:
  *                type: string
  *                example: "09:00:00"
@@ -609,6 +612,7 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
     provider_id,
     user_id,
     service_id,
+    category_id,
     workable,
     state,
     gender,
@@ -621,6 +625,7 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
     providers_provider_id: provider_id,
     providers_users_user_id: user_id,
     services_service_id: service_id,
+    services_categories_category_id: category_id,
     workable,
     state,
     gender,
@@ -635,18 +640,12 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
       locationToProvide.push([
         district,
         region,
-        provider_id,
-        user_id,
-        service_id
       ]);
     });
   } else {
     locationToProvide.push([
       null,
       region,
-      provider_id,
-      user_id,
-      service_id
     ]);
   }
 

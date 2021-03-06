@@ -78,6 +78,7 @@ app.use('/api/public', express.static(path.join(__dirname, './public')));
 
 // Starting the server
 server.listen(app.get('port'), () => {
+  console.clear()
   console.log("HTTPS server listening on port " + app.get('port'));
 });
 const io = require('socket.io')(server, {

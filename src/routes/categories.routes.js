@@ -138,6 +138,7 @@ router.post('/new-category', upload, async (req, res) => {
     title,
     description,
     super_categories_super_category_id,
+    img_url: `api/public/images/categories/${categoryImage?.filename}`,
     created_at: new Date()
   }
 
@@ -165,7 +166,7 @@ router.post('/new-category', upload, async (req, res) => {
 
       // borramos la imagen de la categoria
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/images/${categoryImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${categoryImage?.filename}`))
       } catch(err) {
         console.error(err)
       }

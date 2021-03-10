@@ -6,8 +6,18 @@ servicesModel.getServices = async () => {
   return services
 }
 
+servicesModel.scheduleService = async (data) => {
+  const [scheduleData] = await pool.query('INSERT INTO requested_services SET ?', [data])
+  return scheduleData
+}
+
 servicesModel.getServicesBySuperCategoryTitle = async (super_category_title) => {
   const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'catagory_title', categories.description 'catagory_description', categories.img_url as 'catagory_img_url', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_catagory_description' FROM services  INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE super_categories.title = ?`, [super_category_title]);
+  return services
+}
+
+servicesModel.getServicesPermitted = async (provider_id) => {
+  const [services] = await pool.query("SELECT services.*, super_categories.title as `super_category` FROM oppa.services  LEFT JOIN providers_permitted_services ON providers_permitted_services.services_service_id = services.service_id LEFT JOIN categories ON services.categories_category_id = categories.category_id LEFT JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE isBasic = 1 OR providers_permitted_services.services_service_id = services.service_id AND providers_provider_id = ?;", [provider_id]);
   return services
 }
 
@@ -26,7 +36,7 @@ servicesModel.givePermission = async (service) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    await conn.query('INSER INTO providers_permitted_services SET ?', [service]);
+    await conn.query('INSERT INTO providers_permitted_services SET ?', [service]);
     const [newServicePermitted] = await conn.query('SELECT * FROM services WHERE service_id = ?', [service.services_service_id])
     await conn.commit();
     return newServicePermitted
@@ -153,7 +163,7 @@ servicesModel.getProvidersHasServices = async (service_id) => {
 
 servicesModel.getServicesOfferedByUserId = async (user_id) => {
   let i=0;
-  const [services] = await pool.query("SELECT * FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id WHERE providers_provider_id = ?;", [user_id]);
+  const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE providers_provider_id = ?;", [user_id]);
   for await (let service of services) {
     const [locations] = await pool.query('SELECT * FROM oppa.locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
     services[i].locations = locations

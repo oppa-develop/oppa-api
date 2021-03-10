@@ -91,46 +91,49 @@ const io = require('socket.io')(server, {
 // Socket setup
 const servicesModel = require('./models/services.model');
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
+  console.log('WS: User connected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
+
+  // se le asigna un chat según el data.chat
   socket.on('connectToChat', data => {
-    console.log('Connecting user to chat:', data.chat);
+    console.log('WS: Connecting user to chat:', data.chat);
     if (data.chat) socket.join(data.chat)
   });
   
+  // cuando un mensaje es recibido, se reenvia a todos los miembros del chat
   socket.on('message', data => {
-    console.log('Message:', data.text);
+    console.log('WS: Message:', data.text);
     socket.to(data.chat).broadcast.emit('message', data);
+    // guardar mensaje en la bdd
   });
 
-  socket.on('requestService', async data => {
-    console.log('usuario', data.receptor.user_id, 'solicita servicio:', data.service_id);
-    // await socket.join('requestService' + data.receptor.user_id)
+  // se crea una sala para notificar al proveedor
+  socket.on('notificationsProvider', data => {
+    if (data.provider_id) socket.join(data.provider_id);
+  })
 
-    // buscamos el servicio q le vamos a asignar
-    servicesModel.getProvidersHasServices(data.service_id)
-      .then(possibleServices => {
-        let possibleServicesFiltered = []
-        possibleServices.forEach(service => {
-          console.log('filtro 1', data.receptor.gender, service.gender, (data.receptor.gender == service.gender || service.gender == 'unisex'));
-          if ((data.receptor.gender == service.gender || service.gender == 'unisex') && (dayjs(data.hour).format('HH:mm:ss') > service.start && dayjs(data.hour).format('HH:mm:ss') < service.end)) {
-            possibleServicesFiltered.push(service)
-          }
-        });
-        if (possibleServicesFiltered.length == 0) {
-          console.log('No service found');
-          throw Error('No service found')
-        }
-        let finalService = possibleServicesFiltered[Math.floor(Math.random() * possibleServicesFiltered.length)]; // de todos los servicios q cumplen con las condiciones dadas, se selecciona uno al azar
-        socket.emit('requestService', finalService) // .to('requestService' + data.receptor.user_id) aún no funciona como debe
-      })
-      .catch(err => {
-        let error = new Object();
-        error.error = err.message;
-        socket.emit('requestService', error);
-      })
-  });
+  // se crea una sala para notificar al usuario
+  socket.on('notificationsProvider', data => {
+    if (data.user_id) socket.join(data.user_id);
+  })
+
+  // se envía una notificación al proveedor
+  socket.on('notificateProvider', data => {
+    socket.to(data.provider_id).broadcast.emit('notificateProvider', data);
+  })
+
+  // se envía una notificación al usuario
+  socket.on('notificateUser', data => {
+    console.log('notificando usuario', data);
+    socket.to(data.user_id).broadcast.emit('notificateUser', data);
+  })
+
+  socket.on('serviceConfirmation', data => {
+    console.log('enviando confirmación de servicio al proveedor', data.provider_id);
+    socket.to(data.provider_id).broadcast.emit('serviceConfirmation', data);
+  })
   
+  // acciones al desconectar
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
+    console.log('WS: User disconnected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
   });
 });

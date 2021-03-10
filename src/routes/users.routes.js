@@ -316,8 +316,7 @@ router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-client', async (req, res) => {
-  console.log('user.router', req.body)
+router.post('/new-client', upload, async (req, res) => {
   const {
     firstname,
     lastname,

@@ -102,6 +102,45 @@ router.get('/history/user/:user_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/history/provider/{provider_id}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services that the provider has schedule
+ *    parameters:
+ *    - in: path
+ *      name: provider_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *      description: Numeric ID of the provider to get services history.
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all services.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/history/provider/:provider_id', /* verifyRole.admin, */ (req, res) => {
+  const { provider_id } = req.params;
+
+  servicesModel.getProviderServicesHistory(provider_id)
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: `all services for the provider ${provider_id}`,
+        services
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/basics:
  *  get:
  *    tags:

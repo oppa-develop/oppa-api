@@ -53,6 +53,11 @@ servicesModel.getServicesHistory = async (user_id) => {
   return services
 }
 
+servicesModel.getProviderServicesHistory = async (provider_id) => {
+  const [services] = await pool.query(`SELECT scheduled_services.*, providers_provider_id as 'provider_id', services.* FROM oppa.scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.providers_provider_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ?;`, [provider_id]);
+  return services
+}
+
 servicesModel.getSuperCategoriesBestServices = async () => {
   let conn = null;
   let i = 0;

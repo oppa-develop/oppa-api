@@ -4,6 +4,30 @@ const categoriesModel = require('../models/categories.model');
 const path = require('path');
 const fs = require('fs');
 const verifyRole = require('../libs/verifyRole');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, `../public/images/categories`),
+  fileFilter: (req, file, callback) => {
+    const fileTypes = /jpeg|jpg|png|gif/;
+    const mimetype = fileTypes.test(file.mimetype);
+    const extname = fileTypes.test(path.extname(file.originalname));
+
+    if (mimetype && extname) callback(null, true)
+    callback('Error: File not valid.')
+  },
+  filename: (req, file, callback) => {
+    /**
+     * el req de multer solo muestra los datos que vengan ANTES de la imagen,
+     * por lo que es recomendable mandar la imagen al final del JSON
+     */
+    callback(null, req.body.title.replace(/ /g, '_') + path.extname(file.originalname).toLowerCase());
+  }
+});
+
+const upload = multer({ 
+  storage
+}).single('image')
 
 /**
  * @swagger
@@ -103,7 +127,7 @@ router.get('/:category_id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-category', async (req, res) => {
+router.post('/new-category', upload, async (req, res) => {
   const {
     title,
     description,
@@ -114,6 +138,7 @@ router.post('/new-category', async (req, res) => {
     title,
     description,
     super_categories_super_category_id,
+    img_url: `api/public/images/categories/${categoryImage?.filename}`,
     created_at: new Date()
   }
 
@@ -141,7 +166,7 @@ router.post('/new-category', async (req, res) => {
 
       // borramos la imagen de la categoria
       try {
-        fs.unlinkSync(path.join(__dirname, `../public/images/${categoryImage.filename}`))
+        fs.unlinkSync(path.join(__dirname, `../public/images/${categoryImage?.filename}`))
       } catch(err) {
         console.error(err)
       }

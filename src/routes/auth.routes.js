@@ -89,7 +89,11 @@ router.post('/login-client', (req, res) => {
           }
         })
         .catch(err => {
-          throw Error('Email or password wrong.')
+          console.log(err);
+          res.status(401).json({
+            success: false,
+            message: err.message
+          });
         });
       } else if (userFound[0].state == 'bloked') {
         throw Error('User blocked by the Administrator.')

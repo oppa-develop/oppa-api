@@ -44,4 +44,68 @@ router.get('/:user_id', (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /wallets/new-movement:
+ *  post:
+ *    tags:
+ *    - name: wallets
+ *    description: Increse/decrese user's credits
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              amount:
+ *                type: number
+ *                example: 5000
+ *              total:
+ *                type: number
+ *                example: 10000
+ *              type:
+ *                type: string
+ *                example: ingreso
+ *              user_id:
+ *                type: number
+ *                example: 3
+ *    responses:
+ *      '200':
+ *        description: Returns the new total amount of credits for the user.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/new-movement', async (req, res) => {
+  console.log('user.router', req.body)
+  const {
+    amount,
+    total,
+    type,
+    user_id
+  } = req.body;
+  const movement = {
+    amount,
+    total,
+    type,
+    created_at: new Date(),
+    users_user_id: user_id
+  }
+
+  walletsModel.updateCredits(movement)
+    .then(credits => {
+      res.status(200).json({
+        success: true,
+        message: 'Credits modified successfully.',
+        credits
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+});
+
 module.exports = router;

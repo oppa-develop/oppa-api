@@ -60,9 +60,6 @@ router.get('/:user_id', (req, res) => {
  *              amount:
  *                type: number
  *                example: 5000
- *              total:
- *                type: number
- *                example: 10000
  *              type:
  *                type: string
  *                example: ingreso
@@ -79,19 +76,18 @@ router.post('/new-movement', async (req, res) => {
   console.log('user.router', req.body)
   const {
     amount,
-    total,
     type,
-    user_id
+    user_id,
+    scheduleServiceData
   } = req.body;
   const movement = {
     amount,
-    total,
     type,
     created_at: new Date(),
     users_user_id: user_id
   }
 
-  walletsModel.updateCredits(movement)
+  walletsModel.updateCredits(movement, scheduleServiceData)
     .then(credits => {
       res.status(200).json({
         success: true,

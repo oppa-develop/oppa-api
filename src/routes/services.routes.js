@@ -63,28 +63,28 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
- * /services/history/user/{user_id}:
+ * /services/history/client/{client_id}:
  *  get:
  *    tags:
  *    - name: services
- *    description: Get all services that the user has schedule
+ *    description: Get all services that the client has schedule
  *    parameters:
  *    - in: path
- *      name: user_id
+ *      name: client_id
  *      schema:
  *        type: integer
  *        example: 1
- *      description: Numeric ID of the user to get services history.
+ *      description: Numeric ID of the client to get services history.
  *    responses:
  *      '200':
  *        description: Returns a list containing all services.
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/history/user/:user_id', /* verifyRole.admin, */ (req, res) => {
-  const { user_id } = req.params;
+router.get('/history/client/:client_id', /* verifyRole.admin, */ (req, res) => {
+  const { client_id } = req.params;
 
-  servicesModel.getServicesHistory(user_id)
+  servicesModel.getServicesHistory(client_id)
     .then(services => {
       res.status(200).json({
         success: true,
@@ -132,6 +132,7 @@ router.get('/history/provider/:provider_id', /* verifyRole.admin, */ (req, res) 
       });
     })
     .catch(err => {
+      console.log(err);
       res.status(500).json({
         success: false,
         message: err.message
@@ -562,7 +563,7 @@ router.post('/schedule', async (req, res) => {
       let serviceRequested = possibleServicesFiltered[Math.floor(Math.random() * possibleServicesFiltered.length)];
 
       // ahora comenzamos con el proceso de registrar la solicitud del servicio
-      servicesModel.scheduleService(scheduleData)
+      servicesModel.requestService(scheduleData)
         .then(possibleNewService => {
           console.log(possibleNewService);
           serviceRequested.requested_service_id = possibleNewService.insertId

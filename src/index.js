@@ -128,7 +128,7 @@ io.on('connection', (socket) => {
   })
 
   socket.on('serviceConfirmation', data => {
-    console.log('enviando confirmación de servicio al proveedor', data.provider_id);
+    console.log('enviando confirmación de servicio al proveedor', data.provider.provider_id);
     socket.to(data.provider_id).broadcast.emit('serviceConfirmation', data);
   })
   

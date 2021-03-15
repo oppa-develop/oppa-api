@@ -528,8 +528,6 @@ router.post('/schedule', async (req, res) => {
     receptor
   } = req.body
   const scheduleData = {
-    addresses_address_id: address_id,
-    addresses_users_user_id: user_id,
     clients_client_id: client_id,
     clients_users_user_id: user_id,
     services_service_id: service_id,
@@ -577,7 +575,7 @@ router.post('/schedule', async (req, res) => {
           console.log(err);
 
           // borramos la solicitud de la bdd
-          await servicesModel.deleteRequest(possibleNewService.insertId);
+          await servicesModel.cancelRequest(possibleNewService.insertId);
 
           res.status(400).json({
             success: false,

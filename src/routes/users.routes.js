@@ -282,13 +282,13 @@ router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
  *            properties:
  *              firstname:
  *                type: string
- *                example: John
+ *                example: Test
  *              lastname:
  *                type: string
- *                example: Doe
+ *                example: Client
  *              email:
  *                type: string
- *                example: j.doe@example.com
+ *                example: t.client@example.com
  *              phone:
  *                type: string
  *                example: "+56947381649"
@@ -297,7 +297,7 @@ router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
  *                example: 5.391.260-5
  *              password:
  *                type: string
- *                example: $%&SDF$SD_F-Gs+ad*f45
+ *                example: test
  *              gender:
  *                type: string
  *                example: hombre
@@ -391,25 +391,25 @@ router.post('/new-client', upload, async (req, res) => {
  *            properties:
  *              firstname:
  *                type: string
- *                example: John
+ *                example: Test
  *              lastname:
  *                type: string
- *                example: Doe
+ *                example: Provider
  *              email:
  *                type: string
- *                example: j.doe@example.com
+ *                example: t.provider@example.com
  *              phone:
  *                type: string
- *                example: "+56947381649"
+ *                example: "+56947381642"
  *              rut:
  *                type: string
- *                example: 5.391.260-5
+ *                example: 5.391.260-k
  *              password:
  *                type: string
- *                example: $%&SDF$SD_F-Gs+ad*f45
+ *                example: test
  *              gender:
  *                type: string
- *                example: hombre
+ *                example: mujer
  *              birthdate: 
  *                type: datetime
  *                example: 2020-03-28

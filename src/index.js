@@ -123,13 +123,13 @@ io.on('connection', (socket) => {
 
   // se envía una notificación al usuario
   socket.on('notificateUser', data => {
-    console.log('notificando usuario', data);
+    console.log('notificando usuario', data.user_id);
     socket.to(data.user_id).broadcast.emit('notificateUser', data);
   })
 
   socket.on('serviceConfirmation', data => {
     console.log('enviando confirmación de servicio al proveedor', data.provider.provider_id);
-    socket.to(data.provider_id).broadcast.emit('serviceConfirmation', data);
+    socket.to(data.provider.provider_id).broadcast.emit('serviceConfirmation', data);
   })
   
   // acciones al desconectar

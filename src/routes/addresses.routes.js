@@ -103,11 +103,11 @@ router.post('/new-address', async (req, res) => {
   }
 
   addressesModel.createAddress(address)
-    .then(newAddress => {
+    .then(userAddresses => {
       res.status(200).json({
         success: true,
         message: 'Address created successfully.',
-        newAddress
+        userAddresses
       });
     })
     .catch(err => {

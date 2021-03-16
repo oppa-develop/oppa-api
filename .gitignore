@@ -159,3 +159,5 @@ dist
 
 # SSL files
 src/ssl/
+
+.env copy

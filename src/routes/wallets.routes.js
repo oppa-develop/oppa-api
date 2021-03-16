@@ -73,7 +73,6 @@ router.get('/:user_id', (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.post('/new-movement', async (req, res) => {
-  console.log('user.router', req.body)
   const {
     amount,
     type,
@@ -86,6 +85,9 @@ router.post('/new-movement', async (req, res) => {
     created_at: new Date(),
     users_user_id: user_id
   }
+
+  scheduleServiceData ? scheduleServiceData.state = 'agendado' : null;
+  scheduleServiceData ? scheduleServiceData.created_at = movement.created_at : null;
 
   walletsModel.updateCredits(movement, scheduleServiceData)
     .then(credits => {

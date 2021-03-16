@@ -11,8 +11,8 @@ addressesModel.createAddress = async (newAddress) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    const [row] = await conn.query('INSERT INTO addresses SET ?', [newAddress])
-    const [address] = await conn.query('SELECT * FROM addresses WHERE address_id=?', [row.insertId])
+    await conn.query('INSERT INTO addresses SET ?', [newAddress])
+    const [address] = await conn.query('SELECT * FROM addresses WHERE users_user_id=?', [newAddress.users_user_id])
     await conn.commit();
     return address
   } catch (error) {

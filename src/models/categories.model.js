@@ -2,7 +2,7 @@ const pool = require('../libs/database');
 let categoriesModel = {};
 
 categoriesModel.getCategories = async () => {
-  const [rows] = await pool.query("SELECT *, super_categories.title as 'super_category' FROM oppa.categories INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id;");
+  const [rows] = await pool.query("SELECT categories.*, super_categories.title as 'super_category' FROM oppa.categories INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id;");
   return rows
 }
 

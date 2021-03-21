@@ -6,6 +6,11 @@ categoriesModel.getCategories = async () => {
   return rows
 }
 
+categoriesModel.getCategoriesBySupercategoryTitle = async (title) => {
+  const [categories] = await pool.query("SELECT * FROM oppa.categories INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE super_categories.title = ?;", [title]);
+  return categories
+}
+
 categoriesModel.getCategoryById = async (id) => {
   const [rows] = await pool.query('SELECT * FROM categories WHERE category_id=?;', [id]);
   console.log(rows);

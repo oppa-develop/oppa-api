@@ -98,6 +98,44 @@ router.get('/:category_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /categories/super_category_title/{super_category_title}:
+ *  get:
+ *    tags:
+ *    - name: categories
+ *    description: Get categories by super_category_title.
+ *    parameters:
+ *    - in: path
+ *      name: super_category_title
+ *      schema:
+ *        type: string
+ *      required: true
+ *      description: Title of the super_category.
+ *    responses:
+ *      '200':
+ *        description: Returns the categories for the given super_category_title.
+ */
+router.get('/super_category_title/:super_category_title', /* verifyRole.admin, */ (req, res) => {
+  const { super_category_title } = req.params;
+  console.log(req.params);
+
+  categoriesModel.getCategoriesBySupercategoryTitle(super_category_title)
+    .then(categories => {
+      res.status(200).json({
+        success: true,
+        message: `Categories for the given super_category_title.`,
+        categories
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /categories/new-category:
  *  post:
  *    tags:

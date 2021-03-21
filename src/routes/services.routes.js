@@ -229,7 +229,7 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/super-category/:super_category_title', /* verifyRole.admin, */ (req, res) => {
+router.get('/super-category/title/:super_category_title', /* verifyRole.admin, */ (req, res) => {
   const { super_category_title } = req.params;
 
   servicesModel.getServicesBySuperCategoryTitle(super_category_title)
@@ -268,7 +268,7 @@ router.get('/super-category/:super_category_title', /* verifyRole.admin, */ (req
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/super-category/:super_category_id', /* verifyRole.admin, */ (req, res) => {
+router.get('/super-category/id/:super_category_id', /* verifyRole.admin, */ (req, res) => {
   const { super_category_id } = req.params;
 
   servicesModel.getServicesBySuperCategoryId(super_category_id)

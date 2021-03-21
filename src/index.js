@@ -34,7 +34,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:' + app.get('port') + '/api',
+        url: 'http://localhost:' + 3000 + '/api',
         description: 'Development server (local with test data).'
       },
       {

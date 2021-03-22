@@ -156,16 +156,13 @@ router.get('/super_category_title/:super_category_title', /* verifyRole.admin, *
  *              super_categories_super_category_id:
  *                type: number
  *                example: 1
- *              image:
- *                type: string
- *                format: binary
  *    responses:
  *      '200':
  *        description: Returns the new super category.
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-category', upload, async (req, res) => {
+router.post('/new-category', async (req, res) => {
   const {
     title,
     description,
@@ -176,7 +173,6 @@ router.post('/new-category', upload, async (req, res) => {
     title,
     description,
     super_categories_super_category_id,
-    img_url: `api/public/images/categories/${categoryImage?.filename}`,
     created_at: new Date()
   }
 

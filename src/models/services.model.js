@@ -2,7 +2,7 @@ const pool = require('../libs/database');
 let servicesModel = {};
 
 servicesModel.getServices = async () => {
-  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description' FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id`);
+  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, services.state, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description' FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id`);
   return services
 }
 

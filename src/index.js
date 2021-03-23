@@ -20,6 +20,7 @@ const server = https.createServer({
 
 // Settings
 app.set('port', process.env.PORT || 3000);
+
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
@@ -81,6 +82,7 @@ server.listen(app.get('port'), () => {
   console.clear()
   console.log("HTTPS server listening on port " + app.get('port'));
 });
+
 const io = require('socket.io')(server, {
   cors: {
     origin: "*",

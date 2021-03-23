@@ -567,11 +567,12 @@ router.post('/schedule', async (req, res) => {
       servicesModel.requestService(scheduleData)
         .then(possibleNewService => {
           console.log(possibleNewService);
-          serviceRequested.requested_service_id = possibleNewService.insertId
+          // serviceRequested.requested_service_id = possibleNewService.insertId
           res.status(200).json({
             success: true,
             message: 'Possible new service schedule successfully',
-            serviceRequested
+            serviceRequested,
+            requested_service_id = possibleNewService.insertId
           });
         })
         .catch(async err => {

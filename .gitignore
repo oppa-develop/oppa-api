@@ -161,3 +161,5 @@ dist
 src/ssl/
 
 .env copy
+
+.env2

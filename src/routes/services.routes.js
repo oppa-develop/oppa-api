@@ -558,7 +558,10 @@ router.post('/schedule', async (req, res) => {
       }
 
       // de todos los servicios q cumplen con las condiciones dadas, se selecciona uno al azar
-      let serviceRequested = possibleServicesFiltered[Math.floor(Math.random() * possibleServicesFiltered.length)];
+      // let serviceRequested = possibleServicesFiltered[Math.floor(Math.random() * possibleServicesFiltered.length)];
+
+      // reordenamos el areglo de posibles proveedores aleatoriamente
+      let serviceRequested = shuffleArray(possibleServicesFiltered);
 
       // ahora comenzamos con el proceso de registrar la solicitud del servicio
       servicesModel.requestService(scheduleData)
@@ -888,5 +891,11 @@ router.patch('/offered/change-state', async (req, res) => {
     });
 })
 
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+  }
+}
 
 module.exports = router;

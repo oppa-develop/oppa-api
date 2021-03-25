@@ -572,7 +572,7 @@ router.post('/schedule', async (req, res) => {
             success: true,
             message: 'Possible new service schedule successfully',
             serviceRequested,
-            requested_service_id = possibleNewService.insertId
+            requested_service_id: possibleNewService.insertId
           });
         })
         .catch(async err => {

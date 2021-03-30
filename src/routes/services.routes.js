@@ -102,6 +102,52 @@ router.get('/history/client/:client_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/provider/{provider_id}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services that the provider has schedule
+ *    parameters:
+ *    - in: path
+ *      name: provider_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *      description: Numeric ID of the provider to get services history.
+ *    - in: path
+ *      name: date
+ *      schema:
+ *        type: integer
+ *        example: 2021-08-21
+ *      description: Date to get the history.
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all services.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+ router.get('/provider/:provider_id/date/:date', /* verifyRole.admin, */ (req, res) => {
+  const { provider_id, date } = req.params;
+
+  servicesModel.getProviderServicesByDate(provider_id, date)
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: `all services for the provider ${provider_id}`,
+        services
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/history/provider/{provider_id}:
  *  get:
  *    tags:
@@ -122,8 +168,8 @@ router.get('/history/client/:client_id', /* verifyRole.admin, */ (req, res) => {
  */
 router.get('/history/provider/:provider_id', /* verifyRole.admin, */ (req, res) => {
   const { provider_id } = req.params;
-
-  servicesModel.getProviderServicesHistory(provider_id)
+  const date = dayjs().format('YYYY-MM-DD HH:mm:ss')
+  servicesModel.getProviderServicesHistory(provider_id, date)
     .then(services => {
       res.status(200).json({
         success: true,

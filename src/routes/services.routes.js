@@ -603,10 +603,7 @@ router.post('/schedule', async (req, res) => {
         throw Error('No service found');
       }
 
-      // de todos los servicios q cumplen con las condiciones dadas, se selecciona uno al azar
-      // let serviceRequested = possibleServicesFiltered[Math.floor(Math.random() * possibleServicesFiltered.length)];
-
-      // reordenamos el areglo de posibles proveedores aleatoriamente
+      // reordenamos el arreglo de posibles proveedores aleatoriamente
       let serviceRequested = shuffleArray(possibleServicesFiltered);
 
       // ahora comenzamos con el proceso de registrar la solicitud del servicio

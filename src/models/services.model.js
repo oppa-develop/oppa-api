@@ -11,6 +11,12 @@ servicesModel.requestService = async (data) => {
   return requestedData
 }
 
+servicesModel.editOfferedServiceState = async (service) => {
+  console.log(pool.format(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id]));
+  const [update] = await pool.query(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id])
+  return update
+}
+
 servicesModel.cancelRequest = async (id) => {
   await pool.query("UPDATE requested_services SET state = 'cancelado' WHERE requested_service_id = ?", [id])
   return 'ok'

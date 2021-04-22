@@ -10,6 +10,7 @@ require('dotenv').config({path: path.join(__dirname, '../.env')});
 const https = require('http');
 const fs = require('fs');
 const dayjs = require('dayjs');
+const chatsModel = require('./models/chats.model');
 
 // Initializations
 const app = express();
@@ -73,6 +74,7 @@ app.use('/api/superCategories', require('./routes/super-categories.routes'));
 app.use('/api/addresses', require('./routes/addresses.routes'));
 app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/wallets', require('./routes/wallets.routes'));
+app.use('/api/chats', require('./routes/chats.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));
@@ -101,11 +103,22 @@ io.on('connection', (socket) => {
     if (data.chat) socket.join(data.chat)
   });
   
-  // cuando un mensaje es recibido, se reenvia a todos los miembros del chat
+  // cuando un mensaje es recibido, se guarda el mensaje en la bdd
   socket.on('message', data => {
-    console.log('WS: Message:', data.text);
-    socket.to(data.chat).broadcast.emit('message', data);
-    // guardar mensaje en la bdd
+    console.log('WS: Message:', data);
+    chatsModel.saveMessage({ text: data.text, url: data.url, type: data.type, created_at: data.created_at, chats_chat_id: data.chats_chat_id, users_user_id: data.users_user_id })
+      .then(async (chatUsers) => {
+        // si se guarda correctamente, el mensaje también se envía por websockets
+        socket.to(data.chats_chat_id).broadcast.emit('message', data);
+        // notificamos al usuario del nuevo mensaje
+        data.type = 'message'
+        for await (let chatUser of chatUsers) {
+          socket.to(chatUser.users_user_id).emit('notificateClient', data)
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      })
   });
 
   // se crea una sala para notificar al proveedor
@@ -114,7 +127,7 @@ io.on('connection', (socket) => {
   })
 
   // se crea una sala para notificar al usuario
-  socket.on('notificationsProvider', data => {
+  socket.on('notificationsClient', data => {
     if (data.user_id) socket.join(data.user_id);
   })
 
@@ -124,7 +137,7 @@ io.on('connection', (socket) => {
   })
 
   // se envía una notificación al usuario
-  socket.on('notificateUser', data => {
+  socket.on('notificateClient', data => {
     console.log('notificando usuario', data.user_id);
     socket.to(data.user_id).broadcast.emit('notificateUser', data);
   })

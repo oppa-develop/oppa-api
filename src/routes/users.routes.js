@@ -373,7 +373,120 @@ router.post('/new-client', upload, async (req, res) => {
         message: err.code || err.message
       });
     });
+});
 
+/**
+ * @swagger
+ * /users/new-elder:
+ *  post:
+ *    tags:
+ *    - name: users
+ *    description: Create a new user with role client
+ *    requestBody:
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              firstname:
+ *                type: string
+ *                example: Test
+ *              lastname:
+ *                type: string
+ *                example: Client
+ *              email:
+ *                type: string
+ *                example: t.client@example.com
+ *              phone:
+ *                type: string
+ *                example: "+56947381649"
+ *              rut:
+ *                type: string
+ *                example: 5.391.260-5
+ *              password:
+ *                type: string
+ *                example: test
+ *              gender:
+ *                type: string
+ *                example: hombre
+ *              birthdate: 
+ *                type: datetime
+ *                example: 2020-03-28
+ *              image_ext: 
+ *                type: string
+ *                example: jpg
+ *              image:
+ *                type: string
+ *                format: binary
+ *              user_client_id:
+ *                type: number
+ *                example: 1
+ *    responses:
+ *      '200':
+ *        description: Returns the new user.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/new-elder', upload, async (req, res) => {
+  const {
+    firstname,
+    lastname,
+    password,
+    gender,
+    rut,
+    email,
+    phone,
+    birthdate,
+    image_ext,
+    user_client_id
+  } = req.body;
+  const userImage = req.file
+  const user = {
+    firstname,
+    lastname,
+    password,
+    gender,
+    rut,
+    email: email ? email:null,
+    phone,
+    birthdate: new Date(birthdate),
+    created_at: new Date(),
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
+    state: 'active',
+    email_verified: 'none'
+  }
+
+  console.log({user});
+
+  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET);
+
+  console.log('Creando nuevo usuario');
+  user.password = await helpers.encyptPassword(user.password);
+
+  usersModel.createElder(user, user_client_id)
+    .then(newUser => {
+      delete newUser['password'];
+      res.status(200).json({
+        success: true,
+        message: 'User created successfully.',
+        newUser
+      });
+    })
+    .catch(err => {
+
+      // borramos la imagen del usuario
+      try {
+        fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
+      } catch(err) {
+        console.error(err)
+      }
+
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
 });
 
 /**

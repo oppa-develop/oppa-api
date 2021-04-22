@@ -22,18 +22,16 @@ walletsModel.updateCredits = async (movement, scheduleServiceData) => {
     await conn.query('INSERT INTO wallet_movements SET ?;', [movement]);
 
     // si el movimiento es para pago, registramos el servicio pagado
+    let scheduledServices
     if (movement.type == 'pago') {
-      console.log('***************************************************************');
-      console.log(scheduleServiceData.start);
-      console.log('***************************************************************');
-      console.log(dayjs(scheduleServiceData.start, 'hh:mm'));
-      console.log('***************************************************************');
       scheduleServiceData.start = dayjs(scheduleServiceData.start).format('HH:mm')
-      await conn.query('INSERT INTO scheduled_services SET ?;', [scheduleServiceData]);
+      const [scheduled_services] = await conn.query('INSERT INTO scheduled_services SET ?;', [scheduleServiceData]);
+      scheduleService = scheduled_services
     }
 
     const [credit] = await conn.query('SELECT total FROM wallet_movements WHERE users_user_id = ? ORDER BY wallet_movements_id DESC LIMIT 1', [movement.users_user_id]);
     await conn.commit();
+    if (scheduleService) credit[0].scheduleServiceId = scheduleService.insertId 
     return credit[0]
   } catch (error) {
     if (conn) await conn.rollback();

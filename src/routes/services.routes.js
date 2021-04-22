@@ -603,10 +603,7 @@ router.post('/schedule', async (req, res) => {
         throw Error('No service found');
       }
 
-      // de todos los servicios q cumplen con las condiciones dadas, se selecciona uno al azar
-      // let serviceRequested = possibleServicesFiltered[Math.floor(Math.random() * possibleServicesFiltered.length)];
-
-      // reordenamos el areglo de posibles proveedores aleatoriamente
+      // reordenamos el arreglo de posibles proveedores aleatoriamente
       let serviceRequested = shuffleArray(possibleServicesFiltered);
 
       // ahora comenzamos con el proceso de registrar la solicitud del servicio
@@ -927,6 +924,100 @@ router.patch('/offered/change-state', async (req, res) => {
         success: true,
         message: 'Service created successfully',
         offeredService
+      });
+    })
+    .catch(err => {
+      console.log(err.sqlMessage)
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+})
+
+/**
+ * @swagger
+ * /services/offered/edit:
+ *  put:
+ *    tags:
+ *    - name: services
+ *    description: To edit a offered service.
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              provider_has_services_id:
+ *                type: integer
+ *                example: 1
+ *              gender:
+ *                type: string
+ *                example: hombre
+ *              workable:
+ *                type: string
+ *                example: lmxjvsd
+ *              state:
+ *                type: string
+ *                example: canceled
+ *              start:
+ *                type: string
+ *                example: 09:00
+ *              end:
+ *                type: string
+ *                example: 18:00
+ *              providers_provider_id:
+ *                type: integer
+ *                example: 1
+ *              providers_users_user_id:
+ *                type: integer
+ *                example: 1
+ *              services_service_id:
+ *                type: integer
+ *                example: 1
+ *              services_categories_category_id:
+ *                type: integer
+ *                example: 1
+ *    responses:
+ *      '200':
+ *        description: Edit the offered service for the given provider_has_services_id
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.put('/offered/edit', async (req, res) => { // esto debería ser put
+  const {
+    provider_has_services_id,
+    gender,
+    workable,
+    state,
+    start,
+    end,
+    providers_provider_id,
+    providers_users_user_id,
+    services_service_id,
+    services_categories_category_id
+  } = req.body
+  const service = {
+    provider_has_services_id,
+    gender,
+    workable,
+    state,
+    start,
+    end,
+    updated_at: new Date(),
+    providers_provider_id,
+    providers_users_user_id,
+    services_service_id,
+    services_categories_category_id
+  }
+
+  console.log({service});
+  servicesModel.editOfferedServiceState(service)
+    .then(editedService => {
+      res.status(200).json({
+        success: true,
+        message: 'Service created successfully',
+        editedService
       });
     })
     .catch(err => {

@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage
 }).single('image')
 
@@ -150,8 +150,10 @@ router.get('/providers', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. User not found.
  */
 router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
-  const { user_id } = req.params;
-  
+  const {
+    user_id
+  } = req.params;
+
   usersModel.getUserById(user_id)
     .then(user => {
       if (user.length == 0) {
@@ -199,8 +201,10 @@ router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. User not found.
  */
 router.get('/:user_id/credit', /* verifyRole.admin, */ (req, res) => {
-  const { user_id } = req.params;
-  
+  const {
+    user_id
+  } = req.params;
+
   usersModel.getCreditByUserId(user_id)
     .then(credit => {
       res.status(200).json({
@@ -239,8 +243,10 @@ router.get('/:user_id/credit', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. client_id not found.
  */
 router.get('/:client_id/seniors', /* verifyRole.admin, */ (req, res) => {
-  const { client_id } = req.params;
-  
+  const {
+    client_id
+  } = req.params;
+
   usersModel.getUserSeniors(client_id)
     .then(seniors => {
       if (seniors.length == 0) {
@@ -339,12 +345,17 @@ router.post('/new-client', upload, async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}` : null,
     state: 'active',
     email_verified: 'none'
   }
 
-  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET);
+  user.token = jwt.sign({
+    firstname: user.firstname,
+    lastName: user.lastName,
+    email: user.email,
+    tokenType: 'session'
+  }, process.env.SECRET);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -363,7 +374,7 @@ router.post('/new-client', upload, async (req, res) => {
       // borramos la imagen del usuario
       try {
         fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
-      } catch(err) {
+      } catch (err) {
         console.error(err)
       }
 
@@ -447,18 +458,25 @@ router.post('/new-elder', upload, async (req, res) => {
     password,
     gender,
     rut,
-    email: email ? email:null,
+    email: email ? email : null,
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}` : null,
     state: 'active',
     email_verified: 'none'
   }
 
-  console.log({user});
+  console.log({
+    user
+  });
 
-  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET);
+  user.token = jwt.sign({
+    firstname: user.firstname,
+    lastName: user.lastName,
+    email: user.email,
+    tokenType: 'session'
+  }, process.env.SECRET);
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -477,7 +495,7 @@ router.post('/new-elder', upload, async (req, res) => {
       // borramos la imagen del usuario
       try {
         fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
-      } catch(err) {
+      } catch (err) {
         console.error(err)
       }
 
@@ -561,13 +579,18 @@ router.post('/new-provider', upload, async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}` : null,
     state: 'active',
     email_verified: 'none'
   }
   console.log(userImage);
 
-  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+  user.token = jwt.sign({
+    firstname: user.firstname,
+    lastName: user.lastName,
+    email: user.email,
+    tokenType: 'session'
+  }, process.env.SECRET); // cambiar por secret variable de entorno
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -586,7 +609,7 @@ router.post('/new-provider', upload, async (req, res) => {
       // borramos la imagen del usuario
       try {
         fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
-      } catch(err) {
+      } catch (err) {
         console.error(err)
       }
 
@@ -648,7 +671,7 @@ router.post('/new-provider', upload, async (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
+router.post('/new-admin', /*  verifyRole.teacher, */ async (req, res) => {
   const {
     firstname,
     lastname,
@@ -671,12 +694,17 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
     phone,
     birthdate: new Date(birthdate),
     created_at: new Date(),
-    img_url: userImage ? `api/public/images/users/${userImage?.filename}`:null,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}` : null,
     state: 'active',
     email_verified: 'none'
   }
 
-  user.token = jwt.sign({ firstname: user.firstname, lastName: user.lastName, email: user.email, tokenType: 'session' }, process.env.SECRET); // cambiar por secret variable de entorno
+  user.token = jwt.sign({
+    firstname: user.firstname,
+    lastName: user.lastName,
+    email: user.email,
+    tokenType: 'session'
+  }, process.env.SECRET); // cambiar por secret variable de entorno
 
   console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
@@ -695,7 +723,7 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
       // borramos la imagen del usuario
       try {
         fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage.filename}`))
-      } catch(err) {
+      } catch (err) {
         console.error(err)
       }
 
@@ -737,7 +765,7 @@ router.post('/new-admin',/*  verifyRole.teacher, */ async (req, res) => {
  *      '409':
  *        description: Error. The senior could not have more than one user associated.
  */
-router.post('/add-senior',/*  verifyRole.teacher, */ async (req, res) => {
+router.post('/add-senior', /*  verifyRole.teacher, */ async (req, res) => {
   const {
     user_client_id,
     senior_client_id,
@@ -761,7 +789,7 @@ router.post('/add-senior',/*  verifyRole.teacher, */ async (req, res) => {
     })
     .catch(err => {
       console.log(err);
-      switch(err.code) {
+      switch (err.code) {
         case 'ER_NO_REFERENCED_ROW_2':
           err.message = 'Client or senior does not exist.'
           err.httpError = 404
@@ -782,5 +810,82 @@ router.post('/add-senior',/*  verifyRole.teacher, */ async (req, res) => {
     });
 
 });
+
+/**
+ * @swagger
+ * /users/edit:
+ *  patch:
+ *    tags:
+ *    - name: users
+ *    description: Edit user's data
+ *    requestBody:
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              user_id:
+ *                type: integer
+ *                example: 1
+ *              firstname:
+ *                type: string
+ *                example: John
+ *              lastname:
+ *                type: string
+ *                example: Doe
+ *              gender:
+ *                type: string
+ *                example: hombre
+ *              birthdate:
+ *                type: date
+ *                example: 1993-08-17
+ *              image_ext: 
+ *                type: string
+ *                example: jpg
+ *              image:
+ *                type: string
+ *                format: binary
+ *    responses:
+ *      '200':
+ *        description: Returns the user modified with his new attributes.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ *      '404':
+ *        description: Error. User does not exist.
+ */
+router.patch('/edit', upload, async (req, res) => {
+  const {
+    user_id,
+    firstname,
+    lastname,
+    gender,
+    birthdate
+  } = req.body;
+  const userImage = req.file
+  const userData = {
+    user_id,
+    firstname,
+    lastname,
+    gender,
+    birthdate: new Date(birthdate.split('-')[2] + '-' + birthdate.split('-')[1] + '-' + birthdate.split('-')[0]),
+    updated_at: new Date(),
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}` : null,
+  }
+
+  usersModel.editUser(userData)
+    .then(user => {
+      res.status(200).json({
+        success: true,
+        message: 'User edited successfully.',
+        user
+      });
+    })
+    .catch(err =>  {
+      res.status(500).json({
+        success: false,
+        message: 'Server error. User not edited.',
+      })
+    })
+})
 
 module.exports = router;

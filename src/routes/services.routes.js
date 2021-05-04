@@ -904,18 +904,34 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /services/offered/change-state:
+ *  patch:
+ *    tags:
+ *    - name: services
+ *    description: To change the state of a provided service
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              provider_has_services_id:
+ *                type: integer
+ *                example: 1
+ *              state:
+ *                type: string
+ *                example: 'active'
+ */
 router.patch('/offered/change-state', async (req, res) => {
   const {
-    provider_id,
-    user_id,
-    service_id,
+    provider_has_services_id,
     state
   } = req.body
   const offeredService = {
     state,
-    provider_id,
-    user_id,
-    service_id
+    provider_has_services_id
   }
 
   servicesModel.changeOfferedServiceState(offeredService)

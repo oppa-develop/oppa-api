@@ -219,8 +219,8 @@ servicesModel.getServicesOfferedByUserId = async (user_id) => {
 }
 
 servicesModel.changeOfferedServiceState = async (offeredService) => {
-  // detallar los ? desde el offeredService en la query
-  const [res] = await pool.query('UPDATE provider_has_services SET state = ? WHERE ?', [offeredService])
+  console.log(pool.format('UPDATE provider_has_services SET state = ? WHERE provider_has_services_id = ?', [ offeredService.state, offeredService.provider_has_services_id ]));
+  const [res] = await pool.query('UPDATE provider_has_services SET state = ? WHERE provider_has_services_id = ?', [ offeredService.state, offeredService.provider_has_services_id ])
   return res
 }
 

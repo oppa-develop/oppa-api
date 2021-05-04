@@ -147,4 +147,15 @@ usersModel.createAdmin = async (newUser) => {
   }
 }
 
+usersModel.editUser = async (userData) => {
+  if (userData.img_url === null) {
+    await pool.query("UPDATE users SET firstname = ?, lastname = ?, gender = ?, birthdate = ?, updated_at = ? WHERE user_id = ?", [userData.firstname, userData.lastname, userData.gender, userData.birthdate, userData.updated_at, userData.user_id]);
+  } else {
+    await pool.query("UPDATE users SET firstname = ?, lastname = ?, gender = ?, birthdate = ?, updated_at = ?, img_url = ? WHERE user_id = ?", [userData.firstname, userData.lastname, userData.gender, userData.birthdate, userData.updated_at, userData.img_url, userData.user_id]);
+  }
+
+  const [newUserData] = await pool.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id = ?;', [userData.user_id])
+  return newUserData[0]
+}
+
 module.exports = usersModel;

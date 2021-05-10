@@ -23,7 +23,6 @@ const storage = multer.diskStorage({
      * el req de multer solo muestra los datos que vengan ANTES de la imagen,
      * por lo que es recomendable mandar la imagen al final del JSON
      */
-    console.log('clients', file);
     callback(null, req.body.rut + path.extname(file.originalname).toLowerCase());
   }
 });
@@ -357,7 +356,6 @@ router.post('/new-client', upload, async (req, res) => {
     tokenType: 'session'
   }, process.env.SECRET);
 
-  console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
 
   usersModel.createClient(user)
@@ -378,7 +376,6 @@ router.post('/new-client', upload, async (req, res) => {
         console.error(err)
       }
 
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -467,10 +464,6 @@ router.post('/new-elder', upload, async (req, res) => {
     email_verified: 'none'
   }
 
-  console.log({
-    user
-  });
-
   user.token = jwt.sign({
     firstname: user.firstname,
     lastName: user.lastName,
@@ -478,7 +471,6 @@ router.post('/new-elder', upload, async (req, res) => {
     tokenType: 'session'
   }, process.env.SECRET);
 
-  console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
 
   usersModel.createElder(user, user_client_id)
@@ -499,7 +491,6 @@ router.post('/new-elder', upload, async (req, res) => {
         console.error(err)
       }
 
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -583,7 +574,6 @@ router.post('/new-provider', upload, async (req, res) => {
     state: 'active',
     email_verified: 'none'
   }
-  console.log(userImage);
 
   user.token = jwt.sign({
     firstname: user.firstname,
@@ -592,7 +582,6 @@ router.post('/new-provider', upload, async (req, res) => {
     tokenType: 'session'
   }, process.env.SECRET); // cambiar por secret variable de entorno
 
-  console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
 
   usersModel.createProvider(user)
@@ -613,7 +602,6 @@ router.post('/new-provider', upload, async (req, res) => {
         console.error(err)
       }
 
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -706,7 +694,6 @@ router.post('/new-admin', /*  verifyRole.teacher, */ async (req, res) => {
     tokenType: 'session'
   }, process.env.SECRET); // cambiar por secret variable de entorno
 
-  console.log('Creando nuevo usuario');
   user.password = await helpers.encyptPassword(user.password);
 
   usersModel.createAdmin(user)
@@ -727,7 +714,6 @@ router.post('/new-admin', /*  verifyRole.teacher, */ async (req, res) => {
         console.error(err)
       }
 
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -776,8 +762,6 @@ router.post('/add-senior', /*  verifyRole.teacher, */ async (req, res) => {
     created_at: new Date()
   }
 
-  console.log('Asignando senior');
-
   usersModel.addSenior(addData)
     .then(clientSeniors => {
       // delete newUser['password'];
@@ -788,7 +772,6 @@ router.post('/add-senior', /*  verifyRole.teacher, */ async (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err);
       switch (err.code) {
         case 'ER_NO_REFERENCED_ROW_2':
           err.message = 'Client or senior does not exist.'

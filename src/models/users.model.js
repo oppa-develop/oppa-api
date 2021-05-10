@@ -71,7 +71,6 @@ usersModel.createElder = async (newUser, user_client_id) => {
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
     const [clientData] = await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
-    console.log(conn.format("INSERT INTO clients_has_clients SET ?", [{ user_client_id: user_client_id, senior_client_id: clientData.insertId, created_at: newUser.created_at }]));
     await conn.query("INSERT INTO clients_has_clients SET ?", [{ user_client_id: user_client_id, senior_client_id: clientData.insertId, created_at: newUser.created_at }]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();

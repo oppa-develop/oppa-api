@@ -29,7 +29,6 @@ router.get('/user/:user_id', /* verifyRole.admin, */ (req, res) => {
 
   addressesModel.getAddressesByUserId(user_id)
     .then(addresses => {
-      console.log('addresses', addresses.length);
       if (addresses.length == 0) {
         res.status(200).json({
           success: true,

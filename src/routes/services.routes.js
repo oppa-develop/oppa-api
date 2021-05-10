@@ -22,7 +22,6 @@ const storage = multer.diskStorage({
      * el req de multer solo muestra los datos que vengan ANTES de la imagen,
      * por lo que es recomendable mandar la imagen al final del JSON
      */
-    console.log('services', {req});
     callback(null, req.body.title.replace(/ /g, '_') + path.extname(file.originalname).toLowerCase());
   }
 });
@@ -138,7 +137,6 @@ router.get('/history/client/:client_id', /* verifyRole.admin, */ (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.message
@@ -178,7 +176,6 @@ router.get('/history/provider/:provider_id', /* verifyRole.admin, */ (req, res) 
       });
     })
     .catch(err => {
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.message
@@ -428,7 +425,6 @@ router.get('/:service_id/providers', (req, res) => {
 
   servicesModel.getProvidersHasServices(service_id)
     .then(services => {
-      console.log(services);
       res.status(200).json({
         success: true,
         message: 'Services',
@@ -436,7 +432,6 @@ router.get('/:service_id/providers', (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -476,7 +471,6 @@ router.get('/offered/provider/:provider_id', (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -516,7 +510,6 @@ router.get('/permitted/provider/:provider_id', (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -609,7 +602,6 @@ router.post('/schedule', async (req, res) => {
       // ahora comenzamos con el proceso de registrar la solicitud del servicio
       servicesModel.requestService(scheduleData)
         .then(possibleNewService => {
-          console.log(possibleNewService);
           // serviceRequested.requested_service_id = possibleNewService.insertId
           res.status(200).json({
             success: true,
@@ -619,7 +611,6 @@ router.post('/schedule', async (req, res) => {
           });
         })
         .catch(async err => {
-          console.log(err);
 
           // borramos la solicitud de la bdd
           await servicesModel.cancelRequest(possibleNewService.insertId);
@@ -631,7 +622,6 @@ router.post('/schedule', async (req, res) => {
         });
     })
     .catch(err => {
-      console.log(err);
       res.status(400).json({
         success: false,
         message: err
@@ -704,7 +694,6 @@ router.post('/new-service', upload, async (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err);
       // borramos la imagen del servicio
       try {
         fs.unlinkSync(path.join(__dirname, `../public/images/${serviceImage.filename}`))
@@ -784,7 +773,6 @@ router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -896,7 +884,6 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err.sqlMessage)
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -943,7 +930,6 @@ router.patch('/offered/change-state', async (req, res) => {
       });
     })
     .catch(err => {
-      console.log(err.sqlMessage)
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -1027,7 +1013,6 @@ router.put('/offered/edit', async (req, res) => { // esto debería ser put
     services_categories_category_id
   }
 
-  console.log({service});
   servicesModel.editOfferedServiceState(service)
     .then(editedService => {
       res.status(200).json({
@@ -1037,7 +1022,6 @@ router.put('/offered/edit', async (req, res) => { // esto debería ser put
       });
     })
     .catch(err => {
-      console.log(err.sqlMessage)
       res.status(500).json({
         success: false,
         message: err.code || err.message

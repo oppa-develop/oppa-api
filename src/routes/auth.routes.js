@@ -71,7 +71,6 @@ router.post('/login-client', (req, res) => {
   
   authModel.getClientByEmail(login.email)
     .then((userFound) => {
-      console.log(userFound);
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
         .then((success) => {
@@ -89,7 +88,6 @@ router.post('/login-client', (req, res) => {
           }
         })
         .catch(err => {
-          console.log(err);
           res.status(401).json({
             success: false,
             message: err.message
@@ -102,7 +100,6 @@ router.post('/login-client', (req, res) => {
       }
     })
     .catch(err => {
-      console.log(err);
       res.status(401).json({
         success: false,
         message: err.message
@@ -170,7 +167,6 @@ router.post('/login-client/rut', (req, res) => {
   
   authModel.getClientByRut(login.rut)
     .then((userFound) => {
-      console.log(userFound);
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
         .then((success) => {
@@ -188,7 +184,6 @@ router.post('/login-client/rut', (req, res) => {
           }
         })
         .catch(err => {
-          console.log(err);
           res.status(401).json({
             success: false,
             message: err.message
@@ -201,7 +196,6 @@ router.post('/login-client/rut', (req, res) => {
       }
     })
     .catch(err => {
-      console.log(err);
       res.status(401).json({
         success: false,
         message: err.message
@@ -269,7 +263,6 @@ router.post('/login-provider', (req, res) => {
   
   authModel.getProviderByEmail(login.email)
     .then((userFound) => {
-      console.log(userFound);
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
         .then((success) => {
@@ -299,7 +292,6 @@ router.post('/login-provider', (req, res) => {
       }
     })
     .catch(err => {
-      console.log(err);
       res.status(401).json({
         success: false,
         message: err.message
@@ -367,7 +359,6 @@ router.post('/login-admin', (req, res) => {
   
   authModel.getAdminByEmail(login.email)
     .then((userFound) => {
-      console.log(userFound);
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
         .then((success) => {
@@ -394,7 +385,6 @@ router.post('/login-admin', (req, res) => {
       }
     })
     .catch(err => {
-      console.log(err);
       res.status(401).json({
         success: false,
         message: err.message

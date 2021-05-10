@@ -50,7 +50,7 @@ const swaggerOptions = {
 const swaggerDocument = swaggerJsDoc(swaggerOptions);
 
 // Middlewares
-app.use(morgan('dev'));
+// app.use(morgan('dev'));
 app.use(express.urlencoded({
   extended: true
 }));
@@ -117,33 +117,36 @@ io.on('connection', (socket) => {
         }
       })
       .catch(err => {
-        console.log(err);
+        console.log('WS:', err);
       })
   });
 
   // se crea una sala para notificar al proveedor
   socket.on('notificationsProvider', data => {
+    console.log('WS: inscribiendo notificaciones al provider:', data);
     if (data.provider_id) socket.join(data.provider_id);
   })
 
   // se crea una sala para notificar al usuario
-  socket.on('notificationsClient', data => {
+  socket.on('notificationsProvider', data => {
+    console.log('WS: inscribiendo notificaciones al usuario:', data);
     if (data.user_id) socket.join(data.user_id);
   })
 
   // se envía una notificación al proveedor
   socket.on('notificateProvider', data => {
+    console.log('WS: notificando provider:', data.provider_id);
     socket.to(data.provider_id).broadcast.emit('notificateProvider', data);
   })
 
   // se envía una notificación al usuario
-  socket.on('notificateClient', data => {
-    console.log('notificando usuario', data.user_id);
+  socket.on('notificateUser', data => {
+    console.log('WS: notificando usuario', data.user_id);
     socket.to(data.user_id).broadcast.emit('notificateUser', data);
   })
 
   socket.on('serviceConfirmation', data => {
-    console.log('enviando confirmación de servicio al proveedor', data.provider.provider_id);
+    console.log('WS: enviando confirmación de servicio al proveedor', data.provider.provider_id);
     socket.to(data.provider.provider_id).broadcast.emit('serviceConfirmation', data);
   })
   

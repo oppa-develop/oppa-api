@@ -78,7 +78,6 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  */
 router.get('/:category_id', /* verifyRole.admin, */ (req, res) => {
   const { category_id } = req.params;
-  console.log(req.params);
 
   categoriesModel.getCategoryById(category_id)
     .then(category => {
@@ -116,7 +115,6 @@ router.get('/:category_id', /* verifyRole.admin, */ (req, res) => {
  */
 router.get('/super_category_title/:super_category_title', /* verifyRole.admin, */ (req, res) => {
   const { super_category_title } = req.params;
-  console.log(req.params);
 
   categoriesModel.getCategoriesBySupercategoryTitle(super_category_title)
     .then(categories => {
@@ -205,7 +203,6 @@ router.post('/new-category', async (req, res) => {
         console.error(err)
       }
 
-      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message

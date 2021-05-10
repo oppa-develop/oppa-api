@@ -54,7 +54,6 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  */
 router.get('/:super_category_id', /* verifyRole.admin, */ (req, res) => {
   const { super_category_id } = req.params;
-  console.log(req.params);
 
   superCategoriesModel.getSuperCategoryById(super_category_id)
     .then(superCategory => {

@@ -13,7 +13,6 @@ categoriesModel.getCategoriesBySupercategoryTitle = async (title) => {
 
 categoriesModel.getCategoryById = async (id) => {
   const [rows] = await pool.query('SELECT * FROM categories WHERE category_id=?;', [id]);
-  console.log(rows);
   return rows
 }
 

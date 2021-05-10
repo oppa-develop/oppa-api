@@ -14,7 +14,6 @@ chatsModel.createChat = async (newChat, users_ids) => {
         chat.insertId
       ])
     }
-    console.log(conn.format('INSERT INTO users_has_chats (users_user_id, chats_chat_id) VALUES ?', [new_user_has_chat]));
     await conn.query('INSERT INTO users_has_chats (users_user_id, chats_chat_id) VALUES ?', [new_user_has_chat])
     await conn.commit();
     return chat

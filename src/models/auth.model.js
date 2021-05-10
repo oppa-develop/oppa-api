@@ -3,7 +3,6 @@ const pool = require('../libs/database');
 let authModel = {};
 
 authModel.getClientByEmail = async (email) => {
-  console.log(email);
   let conn = null;
   try {
     conn = await pool.getConnection();
@@ -25,7 +24,6 @@ authModel.getClientByEmail = async (email) => {
     } else {
       throw Error('User is not a client')
     }
-    console.log(user[0]);
     await conn.commit();
     return user[0]
   } catch (error) {
@@ -37,7 +35,6 @@ authModel.getClientByEmail = async (email) => {
 }
 
 authModel.getClientByRut = async (rut) => {
-  console.log(rut);
   let conn = null;
   try {
     conn = await pool.getConnection();
@@ -59,7 +56,6 @@ authModel.getClientByRut = async (rut) => {
     } else {
       throw Error('User is not a client')
     }
-    console.log(user[0]);
     await conn.commit();
     return user[0]
   } catch (error) {
@@ -82,7 +78,6 @@ authModel.getProviderByEmail = async (email) => {
     } else {
       throw Error('User is not a provider')
     }
-    console.log(user[0]);
     await conn.commit();
     return user[0]
   } catch (error) {
@@ -105,7 +100,6 @@ authModel.getAdminByEmail = async (email) => {
     } else {
       throw Error('User is not an admin')
     }
-    console.log(user[0]);
     await conn.commit();
     return user[0]
   } catch (error) {

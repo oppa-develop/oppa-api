@@ -18,7 +18,6 @@ storage.clients = multer.diskStorage({
      * el req de multer solo muestra los datos que vengan ANTES de la imagen,
      * por lo que es recomendable mandar la imagen al final del JSON
      */
-    console.log('clients', {req});
     callback(null, req.body.rut + '.' + req.body.image_ext);
   }
 });
@@ -38,7 +37,6 @@ storage.services = multer.diskStorage({
      * el req de multer solo muestra los datos que vengan ANTES de la imagen,
      * por lo que es recomendable mandar la imagen al final del JSON
      */
-    console.log('services', {req});
     callback(null, req.body.title.replace(/ /g, '_') + '.' + req.body.image_ext);
   }
 });
@@ -58,7 +56,6 @@ storage.categories = multer.diskStorage({
      * el req de multer solo muestra los datos que vengan ANTES de la imagen,
      * por lo que es recomendable mandar la imagen al final del JSON
      */
-    console.log('categories', {req});sole.log({req});
     callback(null, req.body.title.replace(/ /g, '_') + '.' + req.body.image_ext);
   }
 });

@@ -12,7 +12,6 @@ servicesModel.requestService = async (data) => {
 }
 
 servicesModel.editOfferedServiceState = async (service) => {
-  console.log(pool.format(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id]));
   const [update] = await pool.query(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id])
   return update
 }
@@ -70,7 +69,6 @@ servicesModel.getServicesHistory = async (client_id) => {
     [provider] = await pool.query(`SELECT providers.provider_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM oppa.users LEFT JOIN providers ON users.user_id = providers.users_user_id WHERE providers.provider_id = ?;`, service.providers_provider_id);
     service.provider = provider[0];
   }
-  console.log({services});
   return services
 }
 
@@ -82,7 +80,6 @@ servicesModel.getProviderServicesByDate = async (provider_id, date) => {
     service.client = client[0];
     service.address = address[0];
   }
-  console.log({services});
   return services
 }
 
@@ -94,7 +91,6 @@ servicesModel.getProviderServicesHistory = async (provider_id, date) => {
     service.client = client[0];
     service.address = address[0];
   }
-  console.log({services});
   return services
 }
 
@@ -130,13 +126,10 @@ servicesModel.provideService = async (serviceToProvide, locationToProvide) => {
     const [canProvide] = await conn.query('SELECT * FROM providers_permitted_services WHERE services_service_id = ?', [serviceToProvide.services_service_id]);
     if (canProvide.length > 0 || isBasic[0].isBasic == 1) {
       const [newServiceProvided] = await conn.query('INSERT INTO provider_has_services SET ?', [serviceToProvide]);
-      // console.log('funcionó antes de locations', newServiceProvided);
       for await (let location of locationToProvide) {
         location.push(newServiceProvided.insertId)
       }
-      console.log(conn.format("INSERT INTO locations (`district`, `region`, `provider_has_services_provider_has_services_id`) VALUES ?", [locationToProvide]))
       await conn.query("INSERT INTO locations (`district`, `region`, `provider_has_services_provider_has_services_id`) VALUES ?", [locationToProvide]);
-      console.log('insertó locations');
       // const [newServiceToProvide] = await conn.query('SELECT * FROM oppa.provider_has_services WHERE provider_has_services_id=?;', [newServiceProvided.insertId]);
       // const [locations] = await conn.query('SELECT * FROM oppa.locations WHERE =?;', [serviceToProvide.providers_provider_id,serviceToProvide.providers_users_user_id,serviceToProvide.services_service_id]);
       // newServiceToProvide[0].locations = locations;
@@ -219,7 +212,6 @@ servicesModel.getServicesOfferedByUserId = async (user_id) => {
 }
 
 servicesModel.changeOfferedServiceState = async (offeredService) => {
-  console.log(pool.format('UPDATE provider_has_services SET state = ? WHERE provider_has_services_id = ?', [ offeredService.state, offeredService.provider_has_services_id ]));
   const [res] = await pool.query('UPDATE provider_has_services SET state = ? WHERE provider_has_services_id = ?', [ offeredService.state, offeredService.provider_has_services_id ])
   return res
 }

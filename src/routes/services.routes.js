@@ -893,6 +893,52 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
 
 /**
  * @swagger
+ * /services/scheduled/change-state:
+ *  patch:
+ *    tags:
+ *    - name: services
+ *    description: To change the state of a provided service
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              scheduled_services_id:
+ *                type: integer
+ *                example: 1
+ *              state:
+ *                type: string
+ *                example: 'active'
+ */
+router.patch('/scheduled/change-state', async (req, res) => {
+  const {
+    scheduled_services_id,
+    state
+  } = req.body
+  const scheduledService = {
+    state,
+    scheduled_services_id
+  }
+
+  servicesModel.changeScheduleServiceState(scheduledService)
+    .then(scheduledService => {
+      res.status(200).json({
+        success: true,
+        message: 'Scheduled service edited successfully',
+        scheduledService
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+})
+
+/**
+ * @swagger
  * /services/offered/change-state:
  *  patch:
  *    tags:
@@ -925,11 +971,58 @@ router.patch('/offered/change-state', async (req, res) => {
     .then(offeredService => {
       res.status(200).json({
         success: true,
-        message: 'Service created successfully',
+        message: 'Offered service edited successfully',
         offeredService
       });
     })
     .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+})
+
+/**
+ * @swagger
+ * /services/scheduled/rank:
+ *  patch:
+ *    tags:
+ *    - name: services
+ *    description: To rank a service
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              provider_has_services_id:
+ *                type: integer
+ *                example: 1
+ *              state:
+ *                type: string
+ *                example: 'active'
+ */
+router.patch('/scheduled/rank', async (req, res) => {
+  const {
+    scheduled_services_id,
+    rank
+  } = req.body
+  const data = {
+    scheduled_services_id,
+    rank
+  }
+
+  servicesModel.rankService(data)
+    .then(offeredService => {
+      res.status(200).json({
+        success: true,
+        message: 'Service ranked successfully',
+        offeredService
+      });
+    })
+    .catch(err => {
+      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -986,7 +1079,7 @@ router.patch('/offered/change-state', async (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.put('/offered/edit', async (req, res) => { // esto debería ser put
+router.put('/offered/edit', async (req, res) => {
   const {
     provider_has_services_id,
     gender,

@@ -50,7 +50,7 @@ const swaggerOptions = {
 const swaggerDocument = swaggerJsDoc(swaggerOptions);
 
 // Middlewares
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 app.use(express.urlencoded({
   extended: true
 }));
@@ -75,6 +75,7 @@ app.use('/api/addresses', require('./routes/addresses.routes'));
 app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/wallets', require('./routes/wallets.routes'));
 app.use('/api/chats', require('./routes/chats.routes'));
+app.use('/api/records', require('./routes/records.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));

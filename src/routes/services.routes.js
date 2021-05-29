@@ -985,6 +985,53 @@ router.patch('/offered/change-state', async (req, res) => {
 
 /**
  * @swagger
+ * /services/scheduled/rank:
+ *  patch:
+ *    tags:
+ *    - name: services
+ *    description: To rank a service
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              provider_has_services_id:
+ *                type: integer
+ *                example: 1
+ *              state:
+ *                type: string
+ *                example: 'active'
+ */
+router.patch('/scheduled/rank', async (req, res) => {
+  const {
+    scheduled_services_id,
+    rank
+  } = req.body
+  const data = {
+    scheduled_services_id,
+    rank
+  }
+
+  servicesModel.rankService(data)
+    .then(offeredService => {
+      res.status(200).json({
+        success: true,
+        message: 'Service ranked successfully',
+        offeredService
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+})
+
+/**
+ * @swagger
  * /services/offered/edit:
  *  put:
  *    tags:

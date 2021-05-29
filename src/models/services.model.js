@@ -64,7 +64,7 @@ servicesModel.givePermission = async (service) => {
 }
 
 servicesModel.getServicesHistory = async (client_id) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.* FROM oppa.scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ?;`, [client_id]);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM oppa.scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ?;`, [client_id]);
   for await (let service of services) {
     [provider] = await pool.query(`SELECT providers.provider_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM oppa.users LEFT JOIN providers ON users.user_id = providers.users_user_id WHERE providers.provider_id = ?;`, service.providers_provider_id);
     service.provider = provider[0];
@@ -213,6 +213,11 @@ servicesModel.getServicesOfferedByUserId = async (user_id) => {
 
 servicesModel.changeOfferedServiceState = async (offeredService) => {
   const [res] = await pool.query('UPDATE provider_has_services SET state = ? WHERE provider_has_services_id = ?', [ offeredService.state, offeredService.provider_has_services_id ])
+  return res
+}
+
+servicesModel.rankService = async (data) => {
+  const [res] = await pool.query('UPDATE scheduled_services SET scheduled_services.rank = ? WHERE scheduled_services_id = ?', [ data.rank, data.scheduled_services_id ])
   return res
 }
 

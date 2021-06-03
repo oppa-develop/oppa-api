@@ -7,7 +7,7 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 require('dotenv').config({path: path.join(__dirname, '../.env')});
-const https = require('https');
+const https = require('http');
 const fs = require('fs');
 const dayjs = require('dayjs');
 const chatsModel = require('./models/chats.model');

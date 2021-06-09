@@ -36,8 +36,8 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:' + 3000 + '/api',
-        description: 'Development server (local with test data).'
+        url: "http://localhost:" + 3000 + "/api",
+        description: "Development server (local with test data)."
       },
       {
         url: 'https://api.somosoppa.cl/api',

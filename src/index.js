@@ -89,7 +89,7 @@ server.listen(app.get('port'), () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: "*",
+    origin: "*:*",
     methods: ["*"]
   }
 });

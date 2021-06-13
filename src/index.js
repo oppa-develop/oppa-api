@@ -90,9 +90,7 @@ server.listen(app.get('port'), () => {
 const io = require('socket.io')(server, {
   cors: {
     "origin": "*",
-    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-    "preflightContinue": false,
-    "optionsSuccessStatus": 204
+    "methods": "*",
   }
 });
 

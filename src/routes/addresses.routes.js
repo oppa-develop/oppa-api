@@ -117,4 +117,23 @@ router.post('/new-address', async (req, res) => {
     });
 });
 
+router.delete('/delete/:address_id', async (req, res) => {
+  const { address_id } = req.params
+  
+  addressesModel.deleteAddress(address_id)
+    .then(row => {
+      res.status(200).json({
+        success: true,
+        message: 'Address deleted successfully.',
+        row
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+})
+
 module.exports = router;

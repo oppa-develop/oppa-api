@@ -26,6 +26,7 @@ addressesModel.createAddress = async (newAddress) => {
 addressesModel.deleteAddress = async (address_id) => {
   const [addressData] = await pool.query('SELECT * FROM addresses WHERE address_id = ?', [address_id])
   await pool.query('DELETE FROM addresses WHERE address_id = ?', [address_id])
+  console.log(addressData)
   const [userAddresses] = await pool.query('SELECT * FROM addresses WHERE users_user_id = ?', [addressData.users_user_id])
 
   return userAddresses

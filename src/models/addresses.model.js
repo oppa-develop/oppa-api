@@ -24,7 +24,7 @@ addressesModel.createAddress = async (newAddress) => {
 }
 
 addressesModel.deleteAddress = async (address_id) => {
-  const [row] = await pool.query('DELETE FROM addresses WHERE id = ?', [address_id])
+  const [row] = await pool.query('DELETE FROM addresses WHERE address_id = ?', [address_id])
   return row
 }
 

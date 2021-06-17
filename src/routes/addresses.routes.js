@@ -121,11 +121,11 @@ router.delete('/delete/:address_id', async (req, res) => {
   const { address_id } = req.params
   
   addressesModel.deleteAddress(address_id)
-    .then(row => {
+    .then(userAddresses => {
       res.status(200).json({
         success: true,
         message: 'Address deleted successfully.',
-        row
+        userAddresses
       });
     })
     .catch(err => {

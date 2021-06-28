@@ -77,6 +77,7 @@ app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/wallets', require('./routes/wallets.routes'));
 app.use('/api/chats', require('./routes/chats.routes'));
 app.use('/api/records', require('./routes/records.routes'));
+app.use('/api/transbank', require('./routes/transbank.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));

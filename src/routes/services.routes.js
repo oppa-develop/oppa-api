@@ -704,7 +704,6 @@ router.post('/schedule2', async (req, res) => {
     addresses_address_id,
     addresses_users_user_id,
     start,
-    end,
     date,
     state: 'agendado',
     created_at: new Date()

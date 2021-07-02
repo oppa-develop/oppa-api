@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage
 }).single('image')
 
@@ -81,7 +81,9 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/history/client/:client_id', /* verifyRole.admin, */ (req, res) => {
-  const { client_id } = req.params;
+  const {
+    client_id
+  } = req.params;
 
   servicesModel.getServicesHistory(client_id)
     .then(services => {
@@ -125,8 +127,11 @@ router.get('/history/client/:client_id', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
- router.get('/provider/:provider_id/date/:date', /* verifyRole.admin, */ (req, res) => {
-  const { provider_id, date } = req.params;
+router.get('/provider/:provider_id/date/:date', /* verifyRole.admin, */ (req, res) => {
+  const {
+    provider_id,
+    date
+  } = req.params;
 
   servicesModel.getProviderServicesByDate(provider_id, date)
     .then(services => {
@@ -165,7 +170,9 @@ router.get('/history/client/:client_id', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/history/provider/:provider_id', /* verifyRole.admin, */ (req, res) => {
-  const { provider_id } = req.params;
+  const {
+    provider_id
+  } = req.params;
   const date = dayjs().format('YYYY-MM-DD HH:mm:ss')
   servicesModel.getProviderServicesHistory(provider_id, date)
     .then(services => {
@@ -234,7 +241,9 @@ router.get('/basics', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
-  const { category_id } = req.params;
+  const {
+    category_id
+  } = req.params;
 
   servicesModel.getServicesByCategoryId(category_id)
     .then(services => {
@@ -273,7 +282,9 @@ router.get('/category/:category_id', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/super-category/title/:super_category_title', /* verifyRole.admin, */ (req, res) => {
-  const { super_category_title } = req.params;
+  const {
+    super_category_title
+  } = req.params;
 
   servicesModel.getServicesBySuperCategoryTitle(super_category_title)
     .then(services => {
@@ -312,7 +323,9 @@ router.get('/super-category/title/:super_category_title', /* verifyRole.admin, *
  *        description: Error. Unauthorized action.
  */
 router.get('/super-category/id/:super_category_id', /* verifyRole.admin, */ (req, res) => {
-  const { super_category_id } = req.params;
+  const {
+    super_category_id
+  } = req.params;
 
   servicesModel.getServicesBySuperCategoryId(super_category_id)
     .then(services => {
@@ -382,7 +395,9 @@ router.get('/super-categories', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/:service_id', /* verifyRole.admin, */ (req, res) => {
-  const { service_id } = req.params;
+  const {
+    service_id
+  } = req.params;
 
   servicesModel.getServicesById(service_id)
     .then(service => {
@@ -421,7 +436,9 @@ router.get('/:service_id', /* verifyRole.admin, */ (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/:service_id/providers', (req, res) => {
-  const { service_id } = req.params;
+  const {
+    service_id
+  } = req.params;
 
   servicesModel.getProvidersHasServices(service_id)
     .then(services => {
@@ -460,7 +477,9 @@ router.get('/:service_id/providers', (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/offered/provider/:provider_id', (req, res) => {
-  const { provider_id } = req.params;
+  const {
+    provider_id
+  } = req.params;
 
   servicesModel.getServicesOfferedByUserId(provider_id)
     .then(services => {
@@ -499,7 +518,9 @@ router.get('/offered/provider/:provider_id', (req, res) => {
  *        description: Error. Unauthorized action.
  */
 router.get('/permitted/provider/:provider_id', (req, res) => {
-  const { provider_id } = req.params;
+  const {
+    provider_id
+  } = req.params;
 
   servicesModel.getServicesPermitted(provider_id)
     .then(services => {
@@ -580,12 +601,12 @@ router.post('/schedule', async (req, res) => {
   servicesModel.getProvidersHasServices(service_id)
     .then(possibleServices => { // recibimos todos los servicios ofrecidos correspondientes con el service_id
       let possibleServicesFiltered = []
-      
+
       // filtramos los servicios en una nueva lista con solo los servicios que cumplen los requisitos de genero, fecha y hora
       possibleServices.forEach(service => {
         const genderCorrect = (receptor.gender == service.gender || service.gender.toLowerCase() == 'unisex');
         const dateCorrect = (dayjs(scheduleData.start).format('HH:mm:ss') > service.start && dayjs(scheduleData.start).format('HH:mm:ss') < service.end)
-        
+
         if (genderCorrect && dateCorrect) {
           possibleServicesFiltered.push(service)
         }
@@ -620,6 +641,82 @@ router.post('/schedule', async (req, res) => {
             message: err
           })
         });
+    })
+    .catch(err => {
+      res.status(400).json({
+        success: false,
+        message: err
+      })
+    })
+});
+
+/**
+ * @swagger
+ * /services/schedule2:
+ *  post:
+ *    tags:
+ *    - name: services
+ *    description: Schedule a service
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              client_id:
+ *                type: number
+ *                example: 1
+ *              user_id:
+ *                type: number
+ *                example: 2
+ *              date:
+ *                type: datetime
+ *                example: 2021-03-05 22:52:35
+ *              start:
+ *                type: time
+ *                example: 09:00:00
+ *              end:
+ *                type: time
+ *                example: "18:00:00"
+ *              provider_has_services_id:
+ *                type: number
+ *                example: 1
+ *    responses:
+ *      '200':
+ *        description: Returns the new service
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.post('/schedule2', async (req, res) => {
+  const {
+    clients_client_id,
+    clients_users_user_id,
+    date,
+    start,
+    provider_has_services_provider_has_services_id,
+    addresses_address_id,
+    addresses_users_user_id
+  } = req.body
+  const scheduleData = {
+    clients_client_id,
+    clients_users_user_id,
+    provider_has_services_provider_has_services_id,
+    addresses_address_id,
+    addresses_users_user_id,
+    start,
+    end,
+    date,
+    state: 'agendado',
+    created_at: new Date()
+  }
+
+  servicesModel.scheduleService(scheduleData)
+    .then(scheduleService => {
+      res.status(200).json({
+        success: true,
+        message: 'Possible new service schedule successfully',
+        scheduleService
+      });
     })
     .catch(err => {
       res.status(400).json({
@@ -680,7 +777,7 @@ router.post('/new-service', upload, async (req, res) => {
     description,
     price,
     categories_category_id,
-    isBasic: isBasic ? 1:0,
+    isBasic: isBasic ? 1 : 0,
     img_url: `api/public/images/services/${serviceImage.filename}`,
     created_at: new Date()
   }
@@ -697,19 +794,19 @@ router.post('/new-service', upload, async (req, res) => {
       // borramos la imagen del servicio
       try {
         fs.unlinkSync(path.join(__dirname, `../public/images/${serviceImage.filename}`))
-      } catch(err) {
+      } catch (err) {
         console.error(err)
       }
       let errMessage, errHttpCode;
-      switch(err.code) {
+      switch (err.code) {
         case 'ER_NO_REFERENCED_ROW_2':
           errHttpCode = 400;
           errMessage = 'The categories_category_id probably does not exist.'
-        break
+          break
         default:
           errHttpCode = 500;
           errMessage = err.code || err.message
-        break
+          break
       }
       res.status(errHttpCode).json({
         success: false,
@@ -762,7 +859,7 @@ router.post('/give-permission', /* verifyRole.admin, */ async (req, res) => {
     providers_provider_id: provider_id,
     providers_users_user_id: user_id,
     created_at: new Date()
-  } 
+  }
 
   servicesModel.givePermission(service)
     .then(newServicePermitted => {
@@ -861,7 +958,7 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
   }
   const locationToProvide = [];
 
-  if(districts){
+  if (districts) {
     districts.forEach(district => {
       locationToProvide.push([
         district,

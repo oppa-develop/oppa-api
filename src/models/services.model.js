@@ -22,7 +22,8 @@ servicesModel.cancelRequest = async (id) => {
 }
 
 servicesModel.scheduleService = async (data) => {
-  const [scheduleService] = await pool.query('INSERT INTO scheduled_services SET ?', [data])
+  const [row] = await pool.query('INSERT INTO scheduled_services SET ?', [data])
+  const scheduleService = await pool.query('SELECT * FROM scheduled_services WHERE scheduled_services_id=?', [row.insertId])
   return scheduleService
 }
 

@@ -371,7 +371,7 @@ router.post('/new-client', upload, async (req, res) => {
 
       // borramos la imagen del usuario
       try {
-        if (userImage.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
+        if (userImage?.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
       } catch (err) {
         console.error(err)
       }
@@ -486,7 +486,7 @@ router.post('/new-elder', upload, async (req, res) => {
 
       // borramos la imagen del usuario
       try {
-        if (userImage.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
+        if (userImage?.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
       } catch (err) {
         console.error(err)
       }
@@ -597,7 +597,7 @@ router.post('/new-provider', upload, async (req, res) => {
 
       // borramos la imagen del usuario
       try {
-        if (userImage.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
+        if (userImage?.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
       } catch (err) {
         console.error(err)
       }
@@ -709,7 +709,7 @@ router.post('/new-admin', /*  verifyRole.teacher, */ async (req, res) => {
 
       // borramos la imagen del usuario
       try {
-        if (userImage.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
+        if (userImage?.filename) fs.unlinkSync(path.join(__dirname, `../public/images/users/${userImage?.filename}`))
       } catch (err) {
         console.error(err)
       }

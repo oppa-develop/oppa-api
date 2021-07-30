@@ -97,9 +97,9 @@ usersModel.createClient = async (newUser) => {
 
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  if (dupEntry.length > 1) {
+  if (dupEntry?.length > 1) {
     throw new Error('The new userData is duplicate')
-  } else if (dupEntry.length === 1 && dupEntry.email) {
+  } else if (dupEntry?.length === 1 && dupEntry.email) {
     // create client id
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -109,7 +109,7 @@ usersModel.createClient = async (newUser) => {
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
-  } else if (dupEntry.length === 1 && !dupEntry.email) {
+  } else if (dupEntry?.length === 1 && !dupEntry.email) {
     throw new Error('Elders can not have another role')
   } else {
     try {
@@ -136,9 +136,9 @@ usersModel.createProvider = async (newUser) => {
 
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  if (dupEntry.length > 1) {
+  if (dupEntry?.length > 1) {
     throw new Error('The new userData is duplicate')
-  } else if (dupEntry.length === 1 && dupEntry.email) {
+  } else if (dupEntry?.length === 1 && dupEntry.email) {
     // create provider id
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -148,7 +148,7 @@ usersModel.createProvider = async (newUser) => {
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
-  } else if (dupEntry.length === 1 && !dupEntry.email) {
+  } else if (dupEntry?.length === 1 && !dupEntry.email) {
     throw new Error('Elders can not have another role')
   } else {
     try {
@@ -175,9 +175,9 @@ usersModel.createAdmin = async (newUser) => {
 
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  if (dupEntry.length > 1) {
+  if (dupEntry?.length > 1) {
     throw new Error('The new userData is duplicate')
-  } else if (dupEntry.length === 1 && dupEntry.email) {
+  } else if (dupEntry?.length === 1 && dupEntry.email) {
     // create admin id
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -187,7 +187,7 @@ usersModel.createAdmin = async (newUser) => {
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
-  } else if (dupEntry.length === 1 && !dupEntry.email) {
+  } else if (dupEntry?.length === 1 && !dupEntry.email) {
     throw new Error('Elders can not have another role')
   } else {
     try {

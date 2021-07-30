@@ -376,6 +376,7 @@ router.post('/new-client', upload, async (req, res) => {
         console.error(err)
       }
 
+      console.log(err)
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -491,6 +492,7 @@ router.post('/new-elder', upload, async (req, res) => {
         console.error(err)
       }
 
+      console.log(err)
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -602,6 +604,7 @@ router.post('/new-provider', upload, async (req, res) => {
         console.error(err)
       }
 
+      console.log(err)
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -714,6 +717,7 @@ router.post('/new-admin', /*  verifyRole.teacher, */ async (req, res) => {
         console.error(err)
       }
 
+      console.log(err)
       res.status(500).json({
         success: false,
         message: err.code || err.message

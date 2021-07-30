@@ -109,6 +109,8 @@ usersModel.createClient = async (newUser) => {
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
+  } else if (dupEntry.length === 1 && !dupEntry.email) {
+    throw new Error('Elders can not have another role')
   } else {
     try {
       conn = await pool.getConnection();
@@ -146,6 +148,8 @@ usersModel.createProvider = async (newUser) => {
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
+  } else if (dupEntry.length === 1 && !dupEntry.email) {
+    throw new Error('Elders can not have another role')
   } else {
     try {
       conn = await pool.getConnection();
@@ -183,6 +187,8 @@ usersModel.createAdmin = async (newUser) => {
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
+  } else if (dupEntry.length === 1 && !dupEntry.email) {
+    throw new Error('Elders can not have another role')
   } else {
     try {
       conn = await pool.getConnection();

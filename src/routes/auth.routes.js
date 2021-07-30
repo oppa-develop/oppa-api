@@ -432,7 +432,7 @@ router.post('/recover-account', (req, res) => {
   } = req.body;
   
   authModel.getUserAndElderByElderRut(rut)
-    .then((supplicantUser, userFound) => { // supplicantUser = usuario al que se le cambiará la clave; userFound = si el elder no tiene supplicantUser, entonces viene este usuario apadrinador.
+    .then(([supplicantUser, userFound]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador.
       res.status(200).json({
         success: false,
         message: err.message,

@@ -12,7 +12,7 @@ usersModel.getClients = async () => {
 }
 usersModel.getCreditByUserId = async (user_id) => {
   const [credit] = await pool.query('SELECT total FROM wallet_movements WHERE users_user_id = ? ORDER BY wallet_movements_id DESC LIMIT 1', [user_id]);
-  return credit[0]?.total || 0
+  return credit[0] ? .total || 0
 }
 
 usersModel.getProviders = async () => {
@@ -27,7 +27,7 @@ usersModel.getUserById = async (id) => {
 
 usersModel.addSenior = async (addData) => {
   let conn = null;
-  
+
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -52,9 +52,12 @@ usersModel.checkDuplicates = async (rut, email) => {
   let conn = null
   try {
     conn = await pool.getConnection()
-    const [dupEntry] = await conn.query("SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE rut=? OR email=?;", [[rut], [email]]);
+    const [dupEntry] = await conn.query("SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE rut=? OR email=?;", [
+      [rut],
+      [email]
+    ]);
     return dupEntry
-  }catch (error) {
+  } catch (error) {
     throw error;
   } finally {
     if (conn) await conn.release();
@@ -63,15 +66,21 @@ usersModel.checkDuplicates = async (rut, email) => {
 
 usersModel.createElder = async (newUser, user_client_id) => {
   let conn = null;
-  
+
   // verificamos que el usuario no exista previamente en la bdd
   await usersModel.checkDuplicates(newUser.rut, newUser.email)
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    const [clientData] = await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
-    await conn.query("INSERT INTO clients_has_clients SET ?", [{ user_client_id: user_client_id, senior_client_id: clientData.insertId, created_at: newUser.created_at }]);
+    const [clientData] = await conn.query("INSERT INTO clients SET ?", [{
+      users_user_id: userData.insertId
+    }]);
+    await conn.query("INSERT INTO clients_has_clients SET ?", [{
+      user_client_id: user_client_id,
+      senior_client_id: clientData.insertId,
+      created_at: newUser.created_at
+    }]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
     await conn.commit();
     return finalUserData[0]
@@ -85,64 +94,112 @@ usersModel.createElder = async (newUser, user_client_id) => {
 
 usersModel.createClient = async (newUser) => {
   let conn = null;
-  
+
   // verificamos que el usuario no exista previamente en la bdd
-  await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  try {
+  const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
+  if (dupEntry.length > 1) {
+    throw new Error('The new userData is duplicate')
+  } else if (dupEntry.length === 1) {
+    // create client id
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    await conn.query("INSERT INTO clients SET ?", [{ users_user_id: userData.insertId }]);
-    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
+    await conn.query("INSERT INTO clients SET ?", [{
+      users_user_id: dupEntry[0].user_id
+    }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
-  } catch (error) {
-    if (conn) await conn.rollback();
-    throw error;
-  } finally {
-    if (conn) await conn.release();
+  } else {
+    try {
+      conn = await pool.getConnection();
+      await conn.beginTransaction();
+      const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
+      await conn.query("INSERT INTO clients SET ?", [{
+        users_user_id: userData.insertId
+      }]);
+      const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
+      await conn.commit();
+      return finalUserData[0]
+    } catch (error) {
+      if (conn) await conn.rollback();
+      throw error;
+    } finally {
+      if (conn) await conn.release();
+    }
   }
 }
 
 usersModel.createProvider = async (newUser) => {
   let conn = null;
-  
+
   // verificamos que el usuario no exista previamente en la bdd
-  await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  try {
+  const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
+  if (dupEntry.length > 1) {
+    throw new Error('The new userData is duplicate')
+  } else if (dupEntry.length === 1) {
+    // create provider id
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    await conn.query("INSERT INTO providers SET ?", [{ users_user_id: userData.insertId }]);
-    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
+    await conn.query("INSERT INTO providers SET ?", [{
+      users_user_id: dupEntry[0].user_id
+    }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
-  } catch (error) {
-    if (conn) await conn.rollback();
-    throw error;
-  } finally {
-    if (conn) await conn.release();
+  } else {
+    try {
+      conn = await pool.getConnection();
+      await conn.beginTransaction();
+      const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
+      await conn.query("INSERT INTO providers SET ?", [{
+        users_user_id: userData.insertId
+      }]);
+      const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
+      await conn.commit();
+      return finalUserData[0]
+    } catch (error) {
+      if (conn) await conn.rollback();
+      throw error;
+    } finally {
+      if (conn) await conn.release();
+    }
   }
 }
 
 usersModel.createAdmin = async (newUser) => {
   let conn = null;
-  
+
   // verificamos que el usuario no exista previamente en la bdd
-  await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  try {
+  const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
+  if (dupEntry.length > 1) {
+    throw new Error('The new userData is duplicate')
+  } else if (dupEntry.length === 1) {
+    // create admin id
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
-    await conn.query("INSERT INTO admins SET ?", [{ users_user_id: userData.insertId }]);
-    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
+    await conn.query("INSERT INTO admins SET ?", [{
+      users_user_id: dupEntry[0].user_id
+    }]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
     await conn.commit();
     return finalUserData[0]
-  } catch (error) {
-    if (conn) await conn.rollback();
-    throw error;
-  } finally {
-    if (conn) await conn.release();
+  } else {
+    try {
+      conn = await pool.getConnection();
+      await conn.beginTransaction();
+      const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);
+      await conn.query("INSERT INTO admins SET ?", [{
+        users_user_id: userData.insertId
+      }]);
+      const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [userData.insertId])
+      await conn.commit();
+      return finalUserData[0]
+    } catch (error) {
+      if (conn) await conn.rollback();
+      throw error;
+    } finally {
+      if (conn) await conn.release();
+    }
   }
 }
 

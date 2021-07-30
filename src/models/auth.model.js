@@ -112,18 +112,22 @@ authModel.getAdminByEmail = async (email) => {
 
 authModel.getUserAndElderByElderRut = async (rut, email) => {
   let conn = null
+  const supplicantUser = null;
+  const userFound = null;
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     if (rut) {
       let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE rut = ?;', [rut]);
-      const supplicantUser = user[0];
-      if (!supplicantUser.email) let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id = (SELECT user_client_id FROM clients_has_clients WHERE senior_client_id = ? LIMIT 1)', [supplicantUser.client_id]);
-      const userFound = user[0] || null;
+      supplicantUser = user[0];
+      if (!supplicantUser.email) {
+        let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id = (SELECT user_client_id FROM clients_has_clients WHERE senior_client_id = ? LIMIT 1)', [supplicantUser.client_id]);
+        userFound = user[0];
+      }
     } else {
       let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE email = ?;', [email]);
-      const supplicantUser = user[0];
-      const userFound = null;
+      supplicantUser = user[0];
+      userFound = null;
     }
 
     return [supplicantUser, userFound]

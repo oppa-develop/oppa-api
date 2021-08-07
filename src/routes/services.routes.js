@@ -499,6 +499,52 @@ router.get('/offered/provider/:provider_id', (req, res) => {
 
 /**
  * @swagger
+ * /services/offered/provider/{provider_id}/delete/{provider_has_services_id}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Delete a selected service from provider_has_services_id
+ *    parameters:
+ *    - in: path
+ *      name: provider_id
+ *      schema:
+ *        type: integer
+ *        example: 2
+ *      required: true
+ *      name: provider_has_services_id
+ *      schema:
+ *        type: integer
+ *        example: 2
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns a confirmation.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.delete('/offered/provider/:provider_id/delete/:provider_has_services_id', (req, res) => {
+  const {
+    provider_id,
+    provider_has_services_id
+  } = req.params;
+
+  servicesModel.deleteServicesOfferedByProviderIdAndProviderHasServicesId(provider_id, provider_has_services_id)
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: 'Service deleted successfully'
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    })
+});
+
+/**
+ * @swagger
  * /services/permitted/provider/{provider_id}:
  *  get:
  *    tags:

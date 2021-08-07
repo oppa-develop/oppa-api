@@ -227,4 +227,9 @@ servicesModel.changeScheduleServiceState = async (scheduledService) => {
   return res
 }
 
+servicesModel.deleteServicesOfferedByProviderIdAndProviderHasServicesId = async (provider_id, provider_has_services_id) => {
+  const [res] = await pool.query('DELETE FROM table_name WHERE provider_id = ? AND provider_has_services_id = ?', [ provider_id, provider_has_services_id ])
+  return res
+}
+
 module.exports = servicesModel;

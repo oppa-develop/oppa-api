@@ -500,7 +500,7 @@ router.get('/offered/provider/:provider_id', (req, res) => {
 /**
  * @swagger
  * /services/offered/provider/{provider_id}/delete/{provider_has_services_id}:
- *  get:
+ *  delete:
  *    tags:
  *    - name: services
  *    description: Delete a selected service from provider_has_services_id
@@ -511,6 +511,7 @@ router.get('/offered/provider/:provider_id', (req, res) => {
  *        type: integer
  *        example: 2
  *      required: true
+ *    - in: path
  *      name: provider_has_services_id
  *      schema:
  *        type: integer

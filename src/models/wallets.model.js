@@ -41,4 +41,10 @@ walletsModel.updateCredits = async (movement, scheduleServiceData) => {
   }
 }
 
+walletsModel.scheduleService = async (scheduleServiceData) => {
+  scheduleServiceData.start = dayjs(scheduleServiceData.start).format('HH:mm')
+  const [scheduled_services] = await conn.query('INSERT INTO scheduled_services SET ?;', [scheduleServiceData]);
+  scheduleService = scheduled_services
+}
+
 module.exports = walletsModel;

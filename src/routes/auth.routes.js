@@ -392,4 +392,59 @@ router.post('/login-admin', (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /auth/recover-account:
+ *  post:
+ *    tags:
+ *    - name: auth
+ *    description: To recover an account
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              rut:
+ *                type: string
+ *                example: 1.123.123-1
+ *            required:
+ *              - rut
+ *    responses:
+ *      '200':
+ *        description: Send a code to user over email.
+ *        schema:
+ *          type: object
+ *          properties:
+ *            success:
+ *              type: boolean
+ *              example: true
+ *            message:
+ *              type: string
+ *              example: Code sent to email ejemplo@correo.cl.
+ *            email:
+ *              type: string
+ *              example: ejemplo@correo.cl.
+ */
+router.post('/recover-account', (req, res) => {
+  const {
+    rut
+  } = req.body;
+  
+  authModel.getUserAndElderByElderRut(rut)
+    .then(([supplicantUser, userFound]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador.
+      res.status(200).json({
+        success: false,
+        message: err.message,
+        email: ''
+      });
+    })
+    .catch(err => {
+      res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
 module.exports = router;

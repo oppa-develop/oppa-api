@@ -22,8 +22,9 @@ servicesModel.cancelRequest = async (id) => {
 }
 
 servicesModel.scheduleService = async (data) => {
-  const [scheduleService] = await pool.query('INSERT INTO scheduled_services SET ?', [data])
-  return scheduleService
+  const [row] = await pool.query('INSERT INTO scheduled_services SET ?', [data])
+  const [scheduleService] = await pool.query('SELECT * FROM scheduled_services WHERE scheduled_services_id=?', [row.insertId])
+  return scheduleService[0]
 }
 
 servicesModel.getServicesBySuperCategoryTitle = async (super_category_title) => {
@@ -223,6 +224,11 @@ servicesModel.rankService = async (data) => {
 
 servicesModel.changeScheduleServiceState = async (scheduledService) => {
   const [res] = await pool.query('UPDATE scheduled_services SET state = ? WHERE scheduled_services_id = ?', [ scheduledService.state, scheduledService.scheduled_services_id ])
+  return res
+}
+
+servicesModel.deleteServicesOfferedByProviderIdAndProviderHasServicesId = async (provider_id, provider_has_services_id) => {
+  const [res] = await pool.query('DELETE FROM table_name WHERE provider_id = ? AND provider_has_services_id = ?', [ provider_id, provider_has_services_id ])
   return res
 }
 

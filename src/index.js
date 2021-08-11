@@ -36,16 +36,17 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:' + 3000 + '/api',
-        description: 'Development server (local with test data).'
+        url: "http://localhost:" + 3000 + "/api",
+        description: "Development server (local with test data)."
       },
       {
-        url: process.env.HOST + '/api',
+        url: "https://api.somosoppa.cl/api",
         description: 'Development server (online with test data).'
       }
     ]
   },
-  apis: ['./src/routes/*.js']
+  // apis: ['./src/routes/*.js']
+  apis: [path.join(__dirname, './routes/*.js')]
 };
 const swaggerDocument = swaggerJsDoc(swaggerOptions);
 
@@ -76,6 +77,7 @@ app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/wallets', require('./routes/wallets.routes'));
 app.use('/api/chats', require('./routes/chats.routes'));
 app.use('/api/records', require('./routes/records.routes'));
+app.use('/api/transbank', require('./routes/transbank.routes'));
 
 // Public
 app.use('/api/public', express.static(path.join(__dirname, './public')));
@@ -88,8 +90,8 @@ server.listen(app.get('port'), () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: "*",
-    methods: ["*"]
+    "origin": "*",
+    "methods": "*",
   }
 });
 

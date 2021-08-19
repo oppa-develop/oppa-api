@@ -587,6 +587,82 @@ router.get('/permitted/provider/:provider_id', (req, res) => {
 
 /**
  * @swagger
+ * /services/{service_id}/potential-providers/district/{district}/date/{date}/hour/{hour}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services permitted for provider_id
+ *    parameters:
+ *    - in: path
+ *      name: service_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *      required: true
+ *    - in: path
+ *      name: region
+ *      schema:
+ *        type: string
+ *        example: 'Region Metropolitana'
+ *      required: true
+ *    - in: path
+ *      name: district
+ *      schema:
+ *        type: string
+ *        example: 'recoleta'
+ *      required: true
+ *    - in: path
+ *      name: date
+ *      schema:
+ *        type: string
+ *        example: '31-12-2021'
+ *      required: true
+ *    - in: path
+ *      name: hour
+ *      schema:
+ *        type: string
+ *        example: '09:30'
+ *      required: true
+ *    - in: path
+ *      name: gender
+ *      schema:
+ *        type: string
+ *        example: 'Mujer'
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all potential providers for a specific service, date, hour and district.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/:service_id/potential-providers/region/:region/district/:district/date/:date/hour/:hour/gender/:gender', (req, res) => {
+  const {
+    service_id,
+    region,
+    district,
+    date,
+    hour,
+    gender
+  } = req.params;
+
+  servicesModel.getPotentialProviders(service_id, region, district, date, hour, gender)
+    .then(providers => {
+      res.status(200).json({
+        success: true,
+        message: 'Potential providers',
+        providers
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    })
+});
+
+/**
+ * @swagger
  * /services/schedule:
  *  post:
  *    tags:

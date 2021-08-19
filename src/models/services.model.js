@@ -6,6 +6,24 @@ servicesModel.getServices = async () => {
   return services
 }
 
+servicesModel.getPotentialProviders = async (service_id, region, district, date, hour, gender) => {
+  // buscamos todos los proveedores que ofrecen ese servicio
+  const [providers] = await pool.query(`SELECT admin_id, client_id, provider_id, users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users  LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ?;`, [service_id]);
+
+  // a cada proveedor le buscamos la configuración de su servicio filtrando por género
+  for await (let provider of providers) {
+    const [provider_has_services] = await pool.query(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = ? OR provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = 'Unisex';`, [provider.provider_id, service_id, gender, provider.provider_id, service_id]);
+    provider.provider_has_services = provider_has_services.filter(provider_has_service => {
+      // filtrar por region, district, date y hour
+      /* if (provider_has_service.) {
+        return provider_has_service
+      } */
+    })
+  }
+
+  return providers
+}
+
 servicesModel.requestService = async (data) => {
   const [requestedData] = await pool.query('INSERT INTO requested_services SET ?', [data])
   return requestedData

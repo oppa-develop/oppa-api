@@ -23,7 +23,7 @@ servicesModel.getPotentialProviders = async (service_id, region, district, date,
   // a cada proveedor le buscamos la configuración de su servicio filtrando por género
   for await (let provider of providers) {
     const [provider_has_services] = await pool.query(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = ? OR provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = 'Unisex';`, [provider.provider_id, service_id, gender, provider.provider_id, service_id]);
-    provider.provider_has_services = provider_has_services.filter(provider_has_service => {
+    provider.provider_has_services = provider_has_services.filter(async provider_has_service => {
       // obtenemos la locación definida por el proveedor para este servicio
       const [location] = await pool.query(`SELECT * FROM locations WHERE locations.provider_has_services_provider_has_services_id = ?;`, [provider_has_service.provider_has_services_id]);
       provider_has_service.location = location;
@@ -58,11 +58,11 @@ servicesModel.getPotentialProviders = async (service_id, region, district, date,
       }
       if (provider_has_service.workable.includes(formatedDate)) filters.date = true;
       // ahora filtramos por hora
-      if (provider_has_service.workable.includes(hour)) filters.hour = true; // este está malo por ahora
+      if (dayjs(hour).isBetween(dayjs(provider_has_service.start), dayjs(provider_has_service.end), 'm')) filters.hour = true;
       // ahora filtramos por género
       if (provider_has_service.gender === gender || provider_has_service.gender.toLowerCase() === 'unisex') filters.gender = true;
 
-      // finalmente comprobamos que todos los filtros sean true
+      // finalmente, comprobamos que todos los filtros sean true
       if (filters.region === true && filters.district === true && filters.date === true && filters.hour === true && filters.gender === true) return provider_has_service
     })
   }

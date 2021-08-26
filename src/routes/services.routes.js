@@ -587,7 +587,7 @@ router.get('/permitted/provider/:provider_id', (req, res) => {
 
 /**
  * @swagger
- * /services/{service_id}/potential-providers/district/{district}/date/{date}/hour/{hour}:
+ * /services/{service_id}/potential-providers/region/{region}/district/{district}/date/{date}/hour/{hour}/gender/{gender}:
  *  get:
  *    tags:
  *    - name: services
@@ -603,7 +603,7 @@ router.get('/permitted/provider/:provider_id', (req, res) => {
  *      name: region
  *      schema:
  *        type: string
- *        example: 'Region Metropolitana'
+ *        example: 'Metropolitana de Santiago'
  *      required: true
  *    - in: path
  *      name: district
@@ -615,13 +615,13 @@ router.get('/permitted/provider/:provider_id', (req, res) => {
  *      name: date
  *      schema:
  *        type: string
- *        example: '31-12-2021'
+ *        example: '2021-31-12'
  *      required: true
  *    - in: path
  *      name: hour
  *      schema:
  *        type: string
- *        example: '09:30'
+ *        example: '19:30'
  *      required: true
  *    - in: path
  *      name: gender
@@ -635,7 +635,7 @@ router.get('/permitted/provider/:provider_id', (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/:service_id/potential-providers/region/:region/district/:district/date/:date/hour/:hour/gender/:gender', (req, res) => {
+router.get('/:service_id/potential-providers/region/:region/district/:district/date/:date/hour/:hour/gender/:gender', async (req, res) => {
   const {
     service_id,
     region,
@@ -645,11 +645,35 @@ router.get('/:service_id/potential-providers/region/:region/district/:district/d
     gender
   } = req.params;
 
-  servicesModel.getPotentialProviders(service_id, region, district, date, hour, gender)
+  try {
+    // obtenemos los proveedores que ofrecen ese servicio
+    const potentialProviders = await servicesModel.getPotentialProviders(service_id, region, district, date, hour, gender)
+    // obtenemos los servicios según los filtros recibidos
+    const potentialServices = await servicesModel.getPotentialServices(potentialProviders, service_id, region, district, date, hour, gender)
+    
+    console.log('paso 3: enviar respuesta correcta');
+    res.status(200).json({
+      success: true,
+      message: potentialServices?.length ? 'Potential providers':'There are no providers for this configuration of solicitude',
+      potentialServices
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: err.code || err.message
+    })
+  }
+  
+  /* servicesModel.getPotentialProviders(service_id, region, district, date, hour, gender)
     .then(providers => {
+      console.table({
+        providers: providers?.length,
+        services: providers.potentialServices
+      });
       res.status(200).json({
         success: true,
-        message: 'Potential providers',
+        message: providers?.length ? 'Potential providers':'There are no providers for this configuration of solicitude',
         providers
       });
     })
@@ -658,7 +682,7 @@ router.get('/:service_id/potential-providers/region/:region/district/:district/d
         success: false,
         message: err.code || err.message
       })
-    })
+    }) */
 });
 
 /**

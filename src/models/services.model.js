@@ -1,4 +1,6 @@
 const dayjs = require('dayjs');
+const isBetween = require('dayjs/plugin/isBetween');
+dayjs.extend(isBetween);
 const pool = require('../libs/database');
 let servicesModel = {};
 
@@ -8,66 +10,56 @@ servicesModel.getServices = async () => {
 }
 
 servicesModel.getPotentialProviders = async (service_id, region, district, date, hour, gender) => {
-  // filtros
-  let filters = {
-    region: false,
-    district: false,
-    date: false,
-    hour: false,
-    gender: false,
-  }
 
-  // buscamos todos los proveedores que ofrecen ese servicio
-  const [providers] = await pool.query(`SELECT admin_id, client_id, provider_id, users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users  LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ?;`, [service_id]);
-
-  // a cada proveedor le buscamos la configuración de su servicio filtrando por género
-  for await (let provider of providers) {
-    const [provider_has_services] = await pool.query(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = ? OR provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = 'Unisex';`, [provider.provider_id, service_id, gender, provider.provider_id, service_id]);
-    provider.provider_has_services = provider_has_services.filter(async provider_has_service => {
-      // obtenemos la locación definida por el proveedor para este servicio
-      const [location] = await pool.query(`SELECT * FROM locations WHERE locations.provider_has_services_provider_has_services_id = ?;`, [provider_has_service.provider_has_services_id]);
-      provider_has_service.location = location;
-
-      // ahora filtramos por region
-      if (provider_has_service.location[0].region === region) filters.region = true;
-      // ahora filtramos por comuna
-      if (Object.values(provider_has_service.location).includes(district)) filters.district = true;
-      // ahora filtramos por fecha
-      switch (dayjs(date).format('d')) {
-        case 0:
-          let formatedDate = 'd';
-          break;
-        case 1:
-          let formatedDate = 'l';
-          break;
-        case 2:
-          let formatedDate = 'm';
-          break;
-        case 3:
-          let formatedDate = 'x';
-          break;
-        case 4:
-          let formatedDate = 'j';
-          break;
-        case 5:
-          let formatedDate = 'v';
-          break;
-        case 6:
-          let formatedDate = 's';
-          break;
-      }
-      if (provider_has_service.workable.includes(formatedDate)) filters.date = true;
-      // ahora filtramos por hora
-      if (dayjs(hour).isBetween(dayjs(provider_has_service.start), dayjs(provider_has_service.end), 'm')) filters.hour = true;
-      // ahora filtramos por género
-      if (provider_has_service.gender === gender || provider_has_service.gender.toLowerCase() === 'unisex') filters.gender = true;
-
-      // finalmente, comprobamos que todos los filtros sean true
-      if (filters.region === true && filters.district === true && filters.date === true && filters.hour === true && filters.gender === true) return provider_has_service
-    })
-  }
+  // buscamos todos los proveedores que ofrecen ese servicio actualmente
+  let [providers] = await pool.query(`SELECT admin_id, client_id, provider_id, users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users  LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ? GROUP BY providers.provider_id;`, [service_id]);
 
   return providers
+}
+
+servicesModel.getPotentialServices = async (potentialProviders, service_id, region, district, date, hour, gender) => {
+  // filtros
+  let filters = {
+    date: false,
+    hour: false,
+  }
+  let potentialServices = []
+
+  console.log('paso 2:', potentialServices);
+  return new Promise(async resolve => {
+    let i = 0
+    for await (let provider of potentialProviders) {
+      // borramos la data sensible
+      delete provider.password;
+      delete provider.token;
+  
+      const [provider_has_services] = await pool.query(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = ? OR provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND (provider_has_services.gender = 'Unisex' OR provider_has_services.gender = ?);`, [provider.provider_id, service_id, gender, provider.provider_id, service_id, gender]);
+      provider_has_services.filter(async provider_has_service => {
+        // obtenemos la locación definida por el proveedor para este servicio, filtrada por region, comuna y género
+        const [location] = await pool.query(`SELECT * FROM locations WHERE locations.provider_has_services_provider_has_services_id = ? AND locations.region = ? AND (locations.district = ? OR locations.district IS NULL);`, [provider_has_service.provider_has_services_id, region, district]);
+        provider_has_service.location = location;
+  
+        // ahora filtramos por fecha
+        let dateWeekNumber = dayjs(date).format('d');
+        if (dateWeekNumber === '0') dateWeekNumber = 'd';
+        if (dateWeekNumber === '1') dateWeekNumber = 'l';
+        if (dateWeekNumber === '2') dateWeekNumber = 'm';
+        if (dateWeekNumber === '3') dateWeekNumber = 'x';
+        if (dateWeekNumber === '4') dateWeekNumber = 'j';
+        if (dateWeekNumber === '5') dateWeekNumber = 'v';
+        if (dateWeekNumber === '6') dateWeekNumber = 's';
+        if (provider_has_service.workable.includes(dateWeekNumber)) filters.date = true;
+        // ahora filtramos por hora
+        if (parseInt(hour.replace(':', '')) > parseInt(provider_has_service.start.replace(':', '')) && parseInt(hour.replace(':', '')) < parseInt(provider_has_service.end.replace(':', ''))) filters.hour = true;
+  
+        // finalmente, comprobamos que todos los filtros sean true
+        console.table(filters);
+        if (filters.date && filters.hour) potentialServices.push(provider_has_service)
+        if (i === potentialProviders.length - 1) resolve(potentialServices)
+        i++
+      })
+    }
+  })
 }
 
 servicesModel.requestService = async (data) => {
@@ -167,7 +159,7 @@ servicesModel.getSuperCategoriesBestServices = async () => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [superCategories] = await conn.query('SELECT * FROM super_categories');
-    superCategories.forEach( async superCategory => {
+    superCategories.forEach(async superCategory => {
       const [services] = await conn.query('SELECT super_categories_super_category_id, services.* FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id WHERE super_categories_super_category_id = ? ORDER BY RAND() LIMIT 5;', [superCategory.super_category_id])
       superCategories[i].services = services
       i++
@@ -270,7 +262,7 @@ servicesModel.getProvidersHasServices = async (service_id) => {
 }
 
 servicesModel.getServicesOfferedByUserId = async (user_id) => {
-  let i=0;
+  let i = 0;
   const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE providers_provider_id = ?;", [user_id]);
   for await (let service of services) {
     const [locations] = await pool.query('SELECT * FROM oppa.locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
@@ -282,22 +274,22 @@ servicesModel.getServicesOfferedByUserId = async (user_id) => {
 }
 
 servicesModel.changeOfferedServiceState = async (offeredService) => {
-  const [res] = await pool.query('UPDATE provider_has_services SET state = ? WHERE provider_has_services_id = ?', [ offeredService.state, offeredService.provider_has_services_id ])
+  const [res] = await pool.query('UPDATE provider_has_services SET state = ? WHERE provider_has_services_id = ?', [offeredService.state, offeredService.provider_has_services_id])
   return res
 }
 
 servicesModel.rankService = async (data) => {
-  const [res] = await pool.query('UPDATE scheduled_services SET scheduled_services.rank = ? WHERE scheduled_services_id = ?', [ data.rank, data.scheduled_services_id ])
+  const [res] = await pool.query('UPDATE scheduled_services SET scheduled_services.rank = ? WHERE scheduled_services_id = ?', [data.rank, data.scheduled_services_id])
   return res
 }
 
 servicesModel.changeScheduleServiceState = async (scheduledService) => {
-  const [res] = await pool.query('UPDATE scheduled_services SET state = ? WHERE scheduled_services_id = ?', [ scheduledService.state, scheduledService.scheduled_services_id ])
+  const [res] = await pool.query('UPDATE scheduled_services SET state = ? WHERE scheduled_services_id = ?', [scheduledService.state, scheduledService.scheduled_services_id])
   return res
 }
 
 servicesModel.deleteServicesOfferedByProviderIdAndProviderHasServicesId = async (provider_id, provider_has_services_id) => {
-  const [res] = await pool.query('DELETE FROM table_name WHERE provider_id = ? AND provider_has_services_id = ?', [ provider_id, provider_has_services_id ])
+  const [res] = await pool.query('DELETE FROM table_name WHERE provider_id = ? AND provider_has_services_id = ?', [provider_id, provider_has_services_id])
   return res
 }
 

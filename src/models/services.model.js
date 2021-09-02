@@ -24,8 +24,7 @@ servicesModel.getPotentialServices = async (potentialProviders, service_id, regi
     hour: false,
   }
   let potentialServices = []
-
-  console.log('paso 2:', potentialServices);
+  
   return new Promise(async resolve => {
     let i = 0
     for await (let provider of potentialProviders) {
@@ -53,7 +52,6 @@ servicesModel.getPotentialServices = async (potentialProviders, service_id, regi
         if (parseInt(hour.replace(':', '')) > parseInt(provider_has_service.start.replace(':', '')) && parseInt(hour.replace(':', '')) < parseInt(provider_has_service.end.replace(':', ''))) filters.hour = true;
   
         // finalmente, comprobamos que todos los filtros sean true
-        console.table(filters);
         if (filters.date && filters.hour) potentialServices.push(provider_has_service)
         if (i === potentialProviders.length - 1) resolve(potentialServices)
         i++

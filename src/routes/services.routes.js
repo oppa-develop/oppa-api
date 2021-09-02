@@ -651,7 +651,6 @@ router.get('/:service_id/potential-providers/region/:region/district/:district/d
     // obtenemos los servicios según los filtros recibidos
     const potentialServices = await servicesModel.getPotentialServices(potentialProviders, service_id, region, district, date, hour, gender)
     
-    console.log('paso 3: enviar respuesta correcta');
     res.status(200).json({
       success: true,
       message: potentialServices?.length ? 'Potential providers':'There are no providers for this configuration of solicitude',

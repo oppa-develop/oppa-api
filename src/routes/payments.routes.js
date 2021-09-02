@@ -73,7 +73,10 @@ router.post('/pay', (req,res) => {
     // Transbank recomienda POST, el cual se debe hacer por el lado del cliente, obteniendo
     // esta info por AJAX... al final es lo mismo, así que no estresarse.
 
-  });
+  }).catch((err) => {
+    console.log(err);
+    res.status(401).send(err)
+  })
 });
 
 /**

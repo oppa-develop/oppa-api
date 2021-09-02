@@ -3,7 +3,6 @@ const router = express.Router();
 const TransaccionCompleta = require('transbank-sdk').TransaccionCompleta;
 
 router.post('/create', async (req, res) => {
-  // const { user_id } = req.body;
   let buyOrder = "O-" + Math.floor(Math.random() * 10000) + 1;
   let sessionId = "S-" + Math.floor(Math.random() * 10000) + 1;
 
@@ -12,32 +11,37 @@ router.post('/create', async (req, res) => {
     cardNumber,
     month,
     year,
-    amount
+    amount,
+    type
   } = req.body
   
   console.log(req.body)
 
-  const createResponse = await TransaccionCompleta.Transaction.create(
-    buyOrder,
-    sessionId,
-    amount,
-    cvv,
-    cardNumber,
-    year + "/" + month
-  );
-
-  let transactionData = {
-    buyOrder,
-    sessionId,
-    amount,
-    createResponse,
-  };
+  try {
+    const createResponse = (type === 'credit') ? 
+      await TransaccionCompleta.Transaction.create( buyOrder, sessionId, amount, cvv, cardNumber, year + "/" + month ) : 
+      await TransaccionCompleta.Transaction.create( buyOrder, sessionId, amount, undefined, cardNumber, year + "/" + month );
   
-  res.status(200).json({
-    success: true,
-    message: 'Se creó la transacción con el objetivo de obtener un identificador único.',
-    transactionData
-  });
+    let transactionData = {
+      buyOrder,
+      sessionId,
+      amount,
+      createResponse,
+    };
+    
+    res.status(200).json({
+      success: true,
+      message: 'Se creó la transacción con el objetivo de obtener un identificador único.',
+      transactionData
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en la transacción.',
+      error
+    });
+  }
 });
 
 router.post('/confirm', async (req, res) => {

@@ -855,6 +855,8 @@ router.post('/schedule2', async (req, res) => {
     created_at: new Date()
   }
 
+  console.table(scheduleData)
+
   servicesModel.scheduleService(scheduleData)
     .then(scheduleService => {
       res.status(200).json({

@@ -87,7 +87,7 @@ servicesModel.getServicesBySuperCategoryTitle = async (super_category_title) => 
 }
 
 servicesModel.getServicesPermitted = async (provider_id) => {
-  const [services] = await pool.query("SELECT services.*, super_categories.title as `super_category` FROM oppa.services LEFT JOIN providers_permitted_services ON providers_permitted_services.services_service_id = services.service_id LEFT JOIN categories ON services.categories_category_id = categories.category_id LEFT JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE isBasic = 1 OR providers_permitted_services.services_service_id = services.service_id AND providers_provider_id = ?;", [provider_id]);
+  const [services] = await pool.query("SELECT services.*, super_categories.title as `super_category` FROM services LEFT JOIN providers_permitted_services ON providers_permitted_services.services_service_id = services.service_id LEFT JOIN categories ON services.categories_category_id = categories.category_id LEFT JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE isBasic = 1 OR providers_permitted_services.services_service_id = services.service_id AND providers_provider_id = ?;", [provider_id]);
   return services
 }
 
@@ -119,18 +119,18 @@ servicesModel.givePermission = async (service) => {
 }
 
 servicesModel.getServicesHistory = async (client_id) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM oppa.scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ?;`, [client_id]);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ?;`, [client_id]);
   for await (let service of services) {
-    [provider] = await pool.query(`SELECT providers.provider_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM oppa.users LEFT JOIN providers ON users.user_id = providers.users_user_id WHERE providers.provider_id = ?;`, service.providers_provider_id);
+    [provider] = await pool.query(`SELECT providers.provider_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN providers ON users.user_id = providers.users_user_id WHERE providers.provider_id = ?;`, service.providers_provider_id);
     service.provider = provider[0];
   }
   return services
 }
 
 servicesModel.getProviderServicesByDate = async (provider_id, date) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM oppa.scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date BETWEEN ? AND ?;`, [provider_id, date + ' 00:00:00', date + ' 23:59:59']);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date BETWEEN ? AND ?;`, [provider_id, date + ' 00:00:00', date + ' 23:59:59']);
   for await (let service of services) {
-    [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM oppa.users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
+    [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
     [address] = await pool.query(`SELECT * FROM addresses WHERE address_id = ?`, service.addresses_address_id);
     service.client = client[0];
     service.address = address[0];
@@ -139,9 +139,9 @@ servicesModel.getProviderServicesByDate = async (provider_id, date) => {
 }
 
 servicesModel.getProviderServicesHistory = async (provider_id, date) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.* FROM oppa.scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date <= ?;`, [provider_id, date]);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.* FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date <= ?;`, [provider_id, date]);
   for await (let service of services) {
-    [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM oppa.users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
+    [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
     [address] = await pool.query(`SELECT * FROM addresses WHERE address_id = ?`, service.addresses_address_id);
     service.client = client[0];
     service.address = address[0];
@@ -177,7 +177,7 @@ servicesModel.provideService = async (serviceToProvide, locationToProvide) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    const [isBasic] = await conn.query('SELECT isBasic FROM oppa.services WHERE service_id = ?;', [serviceToProvide.services_service_id]);
+    const [isBasic] = await conn.query('SELECT isBasic FROM services WHERE service_id = ?;', [serviceToProvide.services_service_id]);
     const [canProvide] = await conn.query('SELECT * FROM providers_permitted_services WHERE services_service_id = ?', [serviceToProvide.services_service_id]);
     if (canProvide.length > 0 || isBasic[0].isBasic == 1) {
       const [newServiceProvided] = await conn.query('INSERT INTO provider_has_services SET ?', [serviceToProvide]);
@@ -185,8 +185,8 @@ servicesModel.provideService = async (serviceToProvide, locationToProvide) => {
         location.push(newServiceProvided.insertId)
       }
       await conn.query("INSERT INTO locations (`district`, `region`, `provider_has_services_provider_has_services_id`) VALUES ?", [locationToProvide]);
-      // const [newServiceToProvide] = await conn.query('SELECT * FROM oppa.provider_has_services WHERE provider_has_services_id=?;', [newServiceProvided.insertId]);
-      // const [locations] = await conn.query('SELECT * FROM oppa.locations WHERE =?;', [serviceToProvide.providers_provider_id,serviceToProvide.providers_users_user_id,serviceToProvide.services_service_id]);
+      // const [newServiceToProvide] = await conn.query('SELECT * FROM provider_has_services WHERE provider_has_services_id=?;', [newServiceProvided.insertId]);
+      // const [locations] = await conn.query('SELECT * FROM locations WHERE =?;', [serviceToProvide.providers_provider_id,serviceToProvide.providers_users_user_id,serviceToProvide.services_service_id]);
       // newServiceToProvide[0].locations = locations;
       await conn.commit();
       return newServiceProvided
@@ -263,7 +263,7 @@ servicesModel.getServicesOfferedByUserId = async (user_id) => {
   let i = 0;
   const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE providers_provider_id = ?;", [user_id]);
   for await (let service of services) {
-    const [locations] = await pool.query('SELECT * FROM oppa.locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
+    const [locations] = await pool.query('SELECT * FROM locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
     services[i].locations = locations
     i++
   }

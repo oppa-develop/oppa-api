@@ -32,7 +32,7 @@ usersModel.addSenior = async (addData) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     await conn.query('INSERT INTO clients_has_clients SET ?;', [addData]);
-    const [clientSeniors] = await conn.query('SELECT users.* FROM oppa.clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [addData.user_client_id])
+    const [clientSeniors] = await conn.query('SELECT users.* FROM clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [addData.user_client_id])
     await conn.commit();
     return clientSeniors
   } catch (error) {
@@ -44,7 +44,7 @@ usersModel.addSenior = async (addData) => {
 }
 
 usersModel.getUserSeniors = async (user_client_id) => {
-  const [clientSeniors] = await pool.query('SELECT users.* FROM oppa.clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [user_client_id])
+  const [clientSeniors] = await pool.query('SELECT users.* FROM clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [user_client_id])
   return clientSeniors
 }
 

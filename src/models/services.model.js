@@ -12,7 +12,7 @@ servicesModel.getServices = async () => {
 servicesModel.getPotentialProviders = async (service_id, region, district, date, hour, gender) => {
 
   // buscamos todos los proveedores que ofrecen ese servicio actualmente
-  let [providers] = await pool.query(`SELECT admin_id, client_id, provider_id, users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users  LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ? GROUP BY providers.provider_id;`, [service_id]);
+  let [providers] = await pool.query(`SELECT admin_id, client_id, provider_id, users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ? GROUP BY providers.provider_id;`, [service_id]);
 
   return providers
 }
@@ -119,7 +119,7 @@ servicesModel.givePermission = async (service) => {
 }
 
 servicesModel.getServicesHistory = async (client_id) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ?;`, [client_id]);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ? ORDER BY scheduled_services_id DESC;`, [client_id]);
   for await (let service of services) {
     [provider] = await pool.query(`SELECT providers.provider_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN providers ON users.user_id = providers.users_user_id WHERE providers.provider_id = ?;`, service.providers_provider_id);
     service.provider = provider[0];
@@ -128,7 +128,7 @@ servicesModel.getServicesHistory = async (client_id) => {
 }
 
 servicesModel.getProviderServicesByDate = async (provider_id, date) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date BETWEEN ? AND ?;`, [provider_id, date + ' 00:00:00', date + ' 23:59:59']);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date BETWEEN ? AND ? ORDER BY scheduled_services_id DESC;`, [provider_id, date + ' 00:00:00', date + ' 23:59:59']);
   for await (let service of services) {
     [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
     [address] = await pool.query(`SELECT * FROM addresses WHERE address_id = ?`, service.addresses_address_id);
@@ -139,7 +139,7 @@ servicesModel.getProviderServicesByDate = async (provider_id, date) => {
 }
 
 servicesModel.getProviderServicesHistory = async (provider_id, date) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.* FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date <= ?;`, [provider_id, date]);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.* FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date <= ? ORDER BY scheduled_services_id DESC;`, [provider_id, date]);
   for await (let service of services) {
     [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
     [address] = await pool.query(`SELECT * FROM addresses WHERE address_id = ?`, service.addresses_address_id);

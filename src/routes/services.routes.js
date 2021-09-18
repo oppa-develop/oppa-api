@@ -809,24 +809,30 @@ router.post('/schedule', async (req, res) => {
  *          schema:
  *            type: object
  *            properties:
- *              client_id:
+ *              clients_client_id:
  *                type: number
  *                example: 1
- *              user_id:
+ *              clients_users_user_id:
  *                type: number
- *                example: 2
+ *                example: 1
  *              date:
- *                type: datetime
- *                example: 2021-03-05 22:52:35
+ *                type: string
+ *                example: '2021-09-18'
  *              start:
- *                type: time
- *                example: 09:00:00
- *              end:
- *                type: time
- *                example: "18:00:00"
- *              provider_has_services_id:
+ *                type: string
+ *                example: '2021-09-18'
+ *              provider_has_services_provider_has_services_id:
  *                type: number
  *                example: 1
+ *              addresses_address_id:
+ *                type: number
+ *                example: 1
+ *              addresses_users_user_id:
+ *                type: number
+ *                example: 1
+ *              state:
+ *                type: string
+ *                example: 'Service canceled by client'
  *    responses:
  *      '200':
  *        description: Returns the new service
@@ -841,7 +847,8 @@ router.post('/schedule2', async (req, res) => {
     start,
     provider_has_services_provider_has_services_id,
     addresses_address_id,
-    addresses_users_user_id
+    addresses_users_user_id,
+    state
   } = req.body
   const scheduleData = {
     clients_client_id,
@@ -851,7 +858,7 @@ router.post('/schedule2', async (req, res) => {
     addresses_users_user_id,
     start,
     date,
-    state: 'agendado',
+    state: state ? state : 'agendado',
     created_at: new Date()
   }
 
@@ -859,9 +866,10 @@ router.post('/schedule2', async (req, res) => {
 
   servicesModel.scheduleService(scheduleData)
     .then(scheduleService => {
+      
       res.status(200).json({
         success: true,
-        message: 'Possible new service schedule successfully',
+        message: 'Service schedule successfully',
         scheduleService
       });
     })

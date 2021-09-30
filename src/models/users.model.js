@@ -25,6 +25,33 @@ usersModel.getUserById = async (id) => {
   return user
 }
 
+usersModel.getQuanitityOfClients = async (start, end) => {
+  const [clientsQuantity] = await pool.query(`SELECT COUNT(*) as 'quantity' FROM clients WHERE created_at BETWEEN ? AND ?;`, [start, end]);
+  const [clientsTotal] = await pool.query(`SELECT COUNT(*) as 'total' FROM clients`);
+  return {
+    quantity: clientsQuantity[0]?.quantity || 0,
+    total: clientsTotal[0]?.total || 0
+  }
+}
+
+usersModel.getQuanitityOfAdmins = async (start, end) => {
+  const [adminsQuantity] = await pool.query(`SELECT COUNT(*) as 'quantity' FROM admins WHERE created_at BETWEEN ? AND ?;`, [start, end]);
+  const [adminsTotal] = await pool.query(`SELECT COUNT(*) as 'total' FROM clients`);
+  return {
+    quantity: adminsQuantity[0]?.quantity || 0,
+    total: adminsTotal[0]?.total || 0
+  }
+}
+
+usersModel.getQuanitityOfProviders = async (start, end) => {
+  const [providersQuantity] = await pool.query(`SELECT COUNT(*) as 'quantity' FROM providers WHERE created_at BETWEEN ? AND ?;`, [start, end]);
+  const [providersTotal] = await pool.query(`SELECT COUNT(*) as 'total' FROM clients`);
+  return {
+    quantity: providersQuantity[0]?.quantity || 0,
+    total: providersTotal[0]?.total || 0
+  }
+}
+
 usersModel.addSenior = async (addData) => {
   let conn = null;
 

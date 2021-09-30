@@ -62,6 +62,36 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/quantityByState:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get quantity of services with each states
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing quantity of services with each states.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/', /* verifyRole.admin, */ (req, res) => {
+  servicesModel.getServicesQuantityByState()
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: 'Quantity of services with each states.',
+        data: services
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/history/client/{client_id}:
  *  get:
  *    tags:

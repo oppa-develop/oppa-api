@@ -62,6 +62,36 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/LastRequested:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get last services requested
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing last services requested.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/', /* verifyRole.admin, */ (req, res) => {
+  servicesModel.getLastServicesRequested()
+    .then(lastServicesRequested => {
+      res.status(200).json({
+        success: true,
+        message: 'Last services requested.',
+        lastServicesRequested
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/quantityByState:
  *  get:
  *    tags:

@@ -10,7 +10,7 @@ servicesModel.getServices = async () => {
 }
 
 servicesModel.getServicesQuantityByState = async () => {
-  const [services] = await pool.query(`SELECT services.title, categories.title AS 'category', super_categories.title AS 'supercategory', scheduled_services.state, count(*) AS 'quantity' FROM oppaAWS.scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY services.title, scheduled_services.state;`);
+  const [services] = await pool.query(`SELECT services.title, categories.title AS 'category', super_categories.title AS 'supercategory', scheduled_services.state, count(*) AS 'quantity' FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY services.title, scheduled_services.state;`);
   return services
 }
 
@@ -20,6 +20,12 @@ servicesModel.getPotentialProviders = async (service_id, region, district, date,
   let [providers] = await pool.query(`SELECT admin_id, client_id, provider_id, users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ? GROUP BY providers.provider_id;`, [service_id]);
 
   return providers
+}
+
+servicesModel.getLastServicesRequested = async () => {
+  let [lastServicesRequested] = await pool.query(`SELECT services.title AS 'service', categories.title AS 'category', super_categories.title AS 'super_category', (SELECT concat(firstname, ' ', lastname) FROM users WHERE users.user_id = provider_has_services.providers_users_user_id LIMIT 1) AS 'provider', (SELECT concat(firstname, ' ', lastname) FROM users WHERE users.user_id = scheduled_services.clients_users_user_id LIMIT 1) AS 'client', scheduled_services.state, scheduled_services.date FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id;`)
+
+  return lastServicesRequested
 }
 
 servicesModel.getPotentialServices = async (potentialProviders, service_id, region, district, date, hour, gender) => {

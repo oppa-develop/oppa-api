@@ -93,6 +93,37 @@ router.get('/LastRequested', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/MostRequested:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get most requested services.
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing most requested services.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/MostRequested/limit/:limit', /* verifyRole.admin, */ (req, res) => {
+  servicesModel.getMostRequestedServices()
+    .then(mostRequestedServices => {
+      res.status(200).json({
+        success: true,
+        message: 'Most requested services.',
+        mostRequestedServices
+      });
+    })
+    .catch(err => {
+      console.log(err)
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/quantityByState:
  *  get:
  *    tags:

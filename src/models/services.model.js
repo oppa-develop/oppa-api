@@ -28,6 +28,12 @@ servicesModel.getLastServicesRequested = async () => {
   return lastServicesRequested
 }
 
+servicesModel.getMostRequestedServices = async (limit) => {
+  let [mostRequestedServices] = await pool.query(`SELECT services.title, categories.title AS 'category', super_categories.title AS 'supercategory', count(*) AS 'quantity', services.img_url FROM oppaAWS.scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY services.title, category ORDER BY quantity DESC LIMIT ?;`, [limit])
+
+  return mostRequestedServices
+}
+
 servicesModel.getPotentialServices = async (potentialProviders, service_id, region, district, date, hour, gender) => {
   // filtros
   let filters = {

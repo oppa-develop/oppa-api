@@ -73,7 +73,7 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.get('/', /* verifyRole.admin, */ (req, res) => {
+router.get('/LastRequested', /* verifyRole.admin, */ (req, res) => {
   servicesModel.getLastServicesRequested()
     .then(lastServicesRequested => {
       res.status(200).json({

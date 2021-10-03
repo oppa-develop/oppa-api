@@ -6,6 +6,13 @@ addressesModel.getAddressesByUserId = async (user_id) => {
   return addresses
 }
 
+addressesModel.getMostRequestedDistricts = async (limit) => {
+  limit = parseInt(limit)
+  let [mostRequestedDistricts] = await pool.query(`SELECT region, district, count(*) AS 'quantity' FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id INNER JOIN addresses ON scheduled_services.addresses_address_id = addresses.address_id GROUP BY region, district LIMIT 5;`, [limit])
+
+  return mostRequestedDistricts
+}
+
 addressesModel.createAddress = async (newAddress) => {
   let conn = null;
   try {

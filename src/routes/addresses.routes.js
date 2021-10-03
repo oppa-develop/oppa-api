@@ -52,6 +52,48 @@ router.get('/user/:user_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /addresses/MostRequested/Limit/{limit}:
+ *  get:
+ *    tags:
+ *    - name: addresses
+ *    description: Get most requested districts.
+ *    parameters:
+ *    - in: path
+ *      name: limit
+ *      schema:
+ *        type: integer
+ *        example: 5
+ *      description: Number of registers to get.
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing most requested districts.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+ router.get('/MostRequested/limit/:limit', /* verifyRole.admin, */ (req, res) => {
+  const {
+    limit
+  } = req.params;
+
+  addressesModel.getMostRequestedDistricts(limit)
+    .then(mostRequestedDistricts => {
+      res.status(200).json({
+        success: true,
+        message: 'Most requested districts.',
+        mostRequestedDistricts
+      });
+    })
+    .catch(err => {
+      console.log(err)
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /addresses/new-address:
  *  post:
  *    tags:

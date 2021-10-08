@@ -104,6 +104,11 @@ servicesModel.getServicesBySuperCategoryTitle = async (super_category_title) => 
   return services
 }
 
+servicesModel.getSalesAmounth = async (start, end) => {
+  const [salesAmounth] = await pool.query(`SELECT SUM(price) AS 'salesAmounth' FROM scheduled_services WHERE NOT state = 'cancelado' AND date BETWEEN ? AND ?;`, [start, end]);
+  return salesAmounth[0]
+}
+
 servicesModel.getServicesPermitted = async (provider_id) => {
   const [services] = await pool.query("SELECT services.*, super_categories.title as `super_category` FROM services LEFT JOIN providers_permitted_services ON providers_permitted_services.services_service_id = services.service_id LEFT JOIN categories ON services.categories_category_id = categories.category_id LEFT JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE isBasic = 1 OR providers_permitted_services.services_service_id = services.service_id AND providers_provider_id = ?;", [provider_id]);
   return services
@@ -265,11 +270,6 @@ servicesModel.createService = async (newService) => {
     if (conn) await conn.release();
   }
 }
-
-
-
-
-
 
 servicesModel.getProvidersHasServices = async (service_id) => {
   const [services] = await pool.query("SELECT provider_has_services.*, users.firstname, users.lastname FROM provider_has_services INNER JOIN users ON users.user_id = providers_users_user_id WHERE services_service_id = ? AND provider_has_services.state = 'active'", [service_id])

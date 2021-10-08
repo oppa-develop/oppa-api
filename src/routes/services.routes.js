@@ -561,6 +561,54 @@ router.get('/:service_id/providers', (req, res) => {
 
 /**
  * @swagger
+ * /services/sales-amounth/{start}/{end}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get sales amount for the given period.
+ *    parameters:
+ *    - in: path
+ *      name: start
+ *      schema:
+ *        type: string
+ *        example: 2021-01-01
+ *      required: true
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns sales amount for the given period.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/sales-amounth/:start/:end', (req, res) => {
+  const {
+    start,
+    end
+  } = req.params;
+
+  servicesModel.getSalesAmounth()
+    .then(data => {
+      res.status(200).json({
+        success: true,
+        message: `Sales amount for the period between ${start} and ${end}`,
+        data
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    })
+});
+
+/**
+ * @swagger
  * /services/offered/provider/{provider_id}:
  *  get:
  *    tags:

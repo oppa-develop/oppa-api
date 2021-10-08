@@ -188,11 +188,17 @@ router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
  *    description: Get quantity of clients between dates.
  *    parameters:
  *    - in: path
- *      name: user_id
+ *      name: start
  *      schema:
- *        type: integer
+ *        type: string
+ *        example: 2021-01-01
  *      required: true
- *      description: Numeric ID of the user to get.
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
  *    responses:
  *      '200':
  *        description: Returns quantity of clients between dates.
@@ -230,11 +236,17 @@ router.get('/clients/quantity/:start/:end', /* verifyRole.admin, */ (req, res) =
  *    description: Get quantity of admins between dates.
  *    parameters:
  *    - in: path
- *      name: user_id
+ *      name: start
  *      schema:
- *        type: integer
+ *        type: string
+ *        example: 2021-01-01
  *      required: true
- *      description: Numeric ID of the user to get.
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
  *    responses:
  *      '200':
  *        description: Returns quantity of admins between dates.
@@ -272,11 +284,17 @@ router.get('/admins/quantity/:start/:end', /* verifyRole.admin, */ (req, res) =>
  *    description: Get quantity of providers between dates.
  *    parameters:
  *    - in: path
- *      name: user_id
+ *      name: start
  *      schema:
- *        type: integer
+ *        type: string
+ *        example: 2021-01-01
  *      required: true
- *      description: Numeric ID of the user to get.
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
  *    responses:
  *      '200':
  *        description: Returns quantity of providers between dates.

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const cert = require('../cert/normal');
 const WebPay = require('webpay-nodejs');
+const walletsModel = require('../models/wallets.model');
 
 const wp = new WebPay({
   commerceCode: cert.commerceCode,
@@ -73,7 +74,10 @@ router.post('/pay', (req,res) => {
     // Transbank recomienda POST, el cual se debe hacer por el lado del cliente, obteniendo
     // esta info por AJAX... al final es lo mismo, así que no estresarse.
 
-  });
+  }).catch((err) => {
+    console.log(err);
+    res.status(401).send(err)
+  })
 });
 
 /**
@@ -96,7 +100,7 @@ router.post('/check', (req,res) => {
   const token = req.body.token_ws;
 
 
-  // Si toodo está ok, Transbank realizará esta petición para que le vuelvas a confirmar la transacción.
+  // Si todo está ok, Transbank realizará esta petición para que le vuelvas a confirmar la transacción.
 
   /**
    * 3. Cuando el usuario ya haya pagado con el banco, Transbank realizará una petición a esta url,

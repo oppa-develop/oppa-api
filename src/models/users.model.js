@@ -25,6 +25,33 @@ usersModel.getUserById = async (id) => {
   return user
 }
 
+usersModel.getQuanitityOfClients = async (start, end) => {
+  const [clientsQuantity] = await pool.query(`SELECT COUNT(*) as 'quantity' FROM clients WHERE created_at BETWEEN ? AND ?;`, [start, end]);
+  const [clientsTotal] = await pool.query(`SELECT COUNT(*) as 'total' FROM clients`);
+  return {
+    quantity: clientsQuantity[0]?.quantity || 0,
+    total: clientsTotal[0]?.total || 0
+  }
+}
+
+usersModel.getQuanitityOfAdmins = async (start, end) => {
+  const [adminsQuantity] = await pool.query(`SELECT COUNT(*) as 'quantity' FROM admins WHERE created_at BETWEEN ? AND ?;`, [start, end]);
+  const [adminsTotal] = await pool.query(`SELECT COUNT(*) as 'total' FROM clients`);
+  return {
+    quantity: adminsQuantity[0]?.quantity || 0,
+    total: adminsTotal[0]?.total || 0
+  }
+}
+
+usersModel.getQuanitityOfProviders = async (start, end) => {
+  const [providersQuantity] = await pool.query(`SELECT COUNT(*) as 'quantity' FROM providers WHERE created_at BETWEEN ? AND ?;`, [start, end]);
+  const [providersTotal] = await pool.query(`SELECT COUNT(*) as 'total' FROM clients`);
+  return {
+    quantity: providersQuantity[0]?.quantity || 0,
+    total: providersTotal[0]?.total || 0
+  }
+}
+
 usersModel.addSenior = async (addData) => {
   let conn = null;
 
@@ -32,7 +59,7 @@ usersModel.addSenior = async (addData) => {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     await conn.query('INSERT INTO clients_has_clients SET ?;', [addData]);
-    const [clientSeniors] = await conn.query('SELECT users.* FROM oppa.clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [addData.user_client_id])
+    const [clientSeniors] = await conn.query('SELECT users.* FROM clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [addData.user_client_id])
     await conn.commit();
     return clientSeniors
   } catch (error) {
@@ -44,7 +71,7 @@ usersModel.addSenior = async (addData) => {
 }
 
 usersModel.getUserSeniors = async (user_client_id) => {
-  const [clientSeniors] = await pool.query('SELECT users.* FROM oppa.clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [user_client_id])
+  const [clientSeniors] = await pool.query('SELECT users.* FROM clients_has_clients INNER JOIN clients ON clients.client_id = senior_client_id INNER JOIN users ON users_user_id = users.user_id WHERE user_client_id = ?;', [user_client_id])
   return clientSeniors
 }
 

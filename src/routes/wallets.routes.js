@@ -75,8 +75,7 @@ router.post('/new-movement', async (req, res) => {
   const {
     amount,
     type,
-    user_id,
-    scheduleServiceData
+    user_id
   } = req.body;
   const movement = {
     amount,
@@ -85,10 +84,7 @@ router.post('/new-movement', async (req, res) => {
     users_user_id: user_id
   }
 
-  scheduleServiceData ? scheduleServiceData.state = 'agendado' : null;
-  scheduleServiceData ? scheduleServiceData.created_at = movement.created_at : null;
-
-  walletsModel.updateCredits(movement, scheduleServiceData)
+  walletsModel.updateCredits(movement)
     .then(credits => {
       res.status(200).json({
         success: true,

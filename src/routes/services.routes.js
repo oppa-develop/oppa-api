@@ -999,7 +999,8 @@ router.post('/schedule2', async (req, res) => {
     provider_has_services_provider_has_services_id,
     addresses_address_id,
     addresses_users_user_id,
-    state
+    state,
+    price
   } = req.body
   const scheduleData = {
     clients_client_id,
@@ -1010,7 +1011,8 @@ router.post('/schedule2', async (req, res) => {
     start,
     date,
     state: state ? state : 'agendado',
-    created_at: new Date()
+    created_at: new Date(),
+    price
   }
 
   console.table(scheduleData)

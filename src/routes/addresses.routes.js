@@ -111,8 +111,8 @@ router.get('/user/:user_id', /* verifyRole.admin, */ (req, res) => {
  *              street:
  *                type: string
  *                example: Av. Recoleta
- *              street:
- *                type: number
+ *              number:
+ *                type: integer
  *                example: 1887
  *              other:
  *                type: string

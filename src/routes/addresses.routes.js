@@ -110,7 +110,10 @@ router.get('/user/:user_id', /* verifyRole.admin, */ (req, res) => {
  *                example: 1
  *              street:
  *                type: string
- *                example: Av. Recoleta #1887
+ *                example: Av. Recoleta
+ *              street:
+ *                type: number
+ *                example: 1887
  *              other:
  *                type: string
  *                example: depto. 309
@@ -130,13 +133,14 @@ router.post('/new-address', async (req, res) => {
   const {
     users_user_id,
     street,
+    number,
     other,
     district,
     region
   } = req.body
   const address = {
     users_user_id,
-    street,
+    street: `${street.trim()} ${number.trim()}`,
     other,
     district,
     region,

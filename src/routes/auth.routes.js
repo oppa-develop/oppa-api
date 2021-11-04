@@ -432,11 +432,64 @@ router.post('/recover-account', (req, res) => {
   } = req.body;
   
   authModel.getUserAndElderByElderRut(rut)
-    .then(([supplicantUser, userFound]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador.
+    .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador.
       res.status(200).json({
+        success: true,
+        message: `Código enviado al email ${userFound ? userFound.email : supplicantUser.email}`,
+        email: userFound ? userFound.email : supplicantUser.email
+      });
+    })
+    .catch(err => {
+      res.status(401).json({
         success: false,
-        message: err.message,
-        email: ''
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /auth/check-passcode:
+ *  post:
+ *    tags:
+ *    - name: auth
+ *    description: To check passcode
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              rut:
+ *                type: string
+ *                example: 1.111.111-1
+ *              code:
+ *                type: string
+ *                example: o68e1zvjmz
+ *              password:
+ *                type: string
+ *                example: contraseña
+ *            required:
+ *              - rut
+ *              - code
+ *              - password
+ *    responses:
+ *      '200':
+ *        description: Send a code and the new password.
+ */
+router.post('/check-passcode', (req, res) => {
+  const {
+    rut,
+    code,
+    password
+  } = req.body;
+  
+  authModel.getUserAndElderByElderRut(rut)
+    .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador.
+      res.status(200).json({
+        success: true,
+        message: `Código enviado al email ${userFound ? userFound.email : supplicantUser.email}`,
+        email: userFound ? userFound.email : supplicantUser.email
       });
     })
     .catch(err => {

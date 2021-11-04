@@ -1,4 +1,5 @@
 const pool = require('../libs/database');
+const helpers = require('../libs/helpers');
 
 let authModel = {};
 
@@ -112,8 +113,8 @@ authModel.getAdminByEmail = async (email) => {
 
 authModel.getUserAndElderByElderRut = async (rut, email) => {
   let conn = null
-  const supplicantUser = null;
-  const userFound = null;
+  let supplicantUser = null;
+  let userFound = null;
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -130,7 +131,35 @@ authModel.getUserAndElderByElderRut = async (rut, email) => {
       userFound = null;
     }
 
-    return [supplicantUser, userFound]
+    const code = Math.random().toString(36).slice(2);
+
+    await conn.query('UPDATE users SET code = ? WHERE rut = ?;', [code, rut]);
+
+    return [supplicantUser, userFound, code]
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
+}
+
+authModel.changePassword = async (code, rut, password) => {
+  let conn = null;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    const [res] = await conn.query('SELECT code FROM users WHERE rut = ?', [rut]);
+    if (res[0].code === code) {
+      // encriptamos la password y la guardamos en la base de datos
+      password = await helpers.encyptPassword(password);
+      await conn.query('UPDATE users SET code = NULL, password = ? WHERE rut = ?;', [password, rut]);
+
+      return true
+    } else {
+      if (conn) await conn.rollback();
+      return false
+    }
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

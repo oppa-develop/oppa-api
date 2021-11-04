@@ -73,11 +73,13 @@ router.post('/login-client', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then((success) => {
+        .then(async (success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
             userFound.token = token;
+
+            await authModel.deletePasscode(userFound.rut)
             res.status(200).json({
               success: true,
               message: 'Loggin success.',
@@ -169,11 +171,14 @@ router.post('/login-client/rut', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then((success) => {
+        .then(async (success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
             userFound.token = token;
+
+            const [resDeletePasscode] = await authModel.deletePasscode(userFound.rut)
+            console.log({resDeletePasscode});
             res.status(200).json({
               success: true,
               message: 'Loggin success.',
@@ -265,11 +270,13 @@ router.post('/login-provider', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then((success) => {
+        .then(async (success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
             userFound.token = token;
+
+            await authModel.deletePasscode(userFound.rut)
             res.status(200).json({
               success: true,
               message: 'Loggin success.',
@@ -361,11 +368,13 @@ router.post('/login-admin', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then((success) => {
+        .then(async (success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
             userFound.token = token;
+
+            await authModel.deletePasscode(userFound.rut)
             res.status(200).json({
               success: true,
               message: 'Loggin success.',
@@ -431,8 +440,8 @@ router.post('/recover-account', (req, res) => {
     rut
   } = req.body;
   
-  authModel.getUserAndElderByElderRut(rut)
-    .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador.
+  authModel.genPassCode(rut)
+    .then(([supplicantUser, userFound]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador, de lo contrario userFound = NULL.
       res.status(200).json({
         success: true,
         message: `Código enviado al email ${userFound ? userFound.email : supplicantUser.email}`,
@@ -450,7 +459,7 @@ router.post('/recover-account', (req, res) => {
 /**
  * @swagger
  * /auth/change-password:
- *  post:
+ *  patch:
  *    tags:
  *    - name: auth
  *    description: To change user password
@@ -477,7 +486,7 @@ router.post('/recover-account', (req, res) => {
  *      '200':
  *        description: Password changed.
  */
-router.post('/change-password', (req, res) => {
+router.patch('/change-password', (req, res) => {
   const {
     rut,
     code,

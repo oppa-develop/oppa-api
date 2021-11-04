@@ -111,31 +111,25 @@ authModel.getAdminByEmail = async (email) => {
   }
 }
 
-authModel.getUserAndElderByElderRut = async (rut, email) => {
+authModel.genPassCode = async (rut) => {
   let conn = null
   let supplicantUser = null;
   let userFound = null;
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    if (rut) {
-      let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE rut = ?;', [rut]);
-      supplicantUser = user[0];
-      if (!supplicantUser.email) {
-        let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id = (SELECT user_client_id FROM clients_has_clients WHERE senior_client_id = ? LIMIT 1)', [supplicantUser.client_id]);
-        userFound = user[0];
-      }
-    } else {
-      let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE email = ?;', [email]);
-      supplicantUser = user[0];
-      userFound = null;
+    let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE rut = ?;', [rut]);
+    supplicantUser = user[0];
+    if (!supplicantUser?.email) {
+      let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id = (SELECT user_client_id FROM clients_has_clients WHERE senior_client_id = ? LIMIT 1)', [supplicantUser.client_id]);
+      userFound = user[0];
     }
 
     const code = Math.random().toString(36).slice(2);
 
-    await conn.query('UPDATE users SET code = ? WHERE rut = ?;', [code, rut]);
-
-    return [supplicantUser, userFound, code]
+    const [res] = await conn.query('UPDATE users SET code = ? WHERE rut = ?;', [code, rut]);
+    
+    return [supplicantUser, userFound]
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;
@@ -162,6 +156,19 @@ authModel.changePassword = async (rut, code, password) => {
     }
   } catch (error) {
     if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
+}
+
+authModel.deletePasscode = async (rut) => {
+  let conn = null;
+  try {
+    conn = await pool.getConnection();
+    await conn.query('UPDATE users SET code = NULL WHERE rut = ?;', [rut]);
+    return true
+  } catch (error) {
     throw error;
   } finally {
     if (conn) await conn.release();

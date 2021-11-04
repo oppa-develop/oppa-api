@@ -127,9 +127,9 @@ authModel.genPassCode = async (rut) => {
 
     const code = Math.random().toString(36).slice(2);
 
-    const [res] = await conn.query('UPDATE users SET code = ? WHERE rut = ?;', [code, rut]);
+    await conn.query('UPDATE users SET code = ? WHERE rut = ?;', [code, rut]);
     
-    return [supplicantUser, userFound]
+    return [supplicantUser, userFound, code]
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

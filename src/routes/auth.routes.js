@@ -441,12 +441,46 @@ router.post('/recover-account', (req, res) => {
   } = req.body;
   
   authModel.genPassCode(rut)
-    .then(([supplicantUser, userFound]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador, de lo contrario userFound = NULL.
-      res.status(200).json({
-        success: true,
-        message: `Código enviado al email ${userFound ? userFound.email : supplicantUser.email}`,
-        email: userFound ? userFound.email : supplicantUser.email
+    .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador, de lo contrario userFound = NULL.
+      // enviamos el código al email del usuario y notificamos al front que se le ha enviado el código.
+      const firstname = supplicantUser[0].firstname;
+      const lastName = supplicantUser[0].lastName;
+      const email = supplicantUser[0].email;
+      const contentHTML = ``
+
+      const transporter = nodemailer.createTransport({
+        host: 'mail.somosoppa.cl',
+        port: 465,
+        secure: false,
+        auth: {
+          user: 'cuentas@somosoppa.cl',
+          pass: '0-TL8sa3~AZM',
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
       });
+    
+      const info = transporter.sendMail({
+        from: "Cuentas SomosOppa <cuentas@somosoppa.cl>",
+        to: email,
+        subject: 'Solicitud de cambio de contraseña en Oppa App.',
+        html: contentHTML
+      });
+    
+      info
+        .then(() => {
+          console.log('Email enviado', info);
+          res.status(200).json({
+            success: true,
+            message: `Code sended to ${userFound ? userFound.email : supplicantUser.email}`,
+            email: userFound ? userFound.email : supplicantUser.email
+          });
+        })
+        .catch(err => {
+          console.log('Error al enviar email', err);
+          throw Error('Error al enviar email.')
+        });
     })
     .catch(err => {
       res.status(401).json({

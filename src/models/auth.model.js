@@ -144,7 +144,7 @@ authModel.getUserAndElderByElderRut = async (rut, email) => {
   }
 }
 
-authModel.changePassword = async (code, rut, password) => {
+authModel.changePassword = async (rut, code, password) => {
   let conn = null;
   try {
     conn = await pool.getConnection();

@@ -449,11 +449,11 @@ router.post('/recover-account', (req, res) => {
 
 /**
  * @swagger
- * /auth/check-passcode:
+ * /auth/change-password:
  *  post:
  *    tags:
  *    - name: auth
- *    description: To check passcode
+ *    description: To change user password
  *    requestBody:
  *      content:
  *        application/json:
@@ -475,22 +475,28 @@ router.post('/recover-account', (req, res) => {
  *              - password
  *    responses:
  *      '200':
- *        description: Send a code and the new password.
+ *        description: Password changed.
  */
-router.post('/check-passcode', (req, res) => {
+router.post('/change-password', (req, res) => {
   const {
     rut,
     code,
     password
   } = req.body;
   
-  authModel.getUserAndElderByElderRut(rut)
-    .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador.
-      res.status(200).json({
-        success: true,
-        message: `Código enviado al email ${userFound ? userFound.email : supplicantUser.email}`,
-        email: userFound ? userFound.email : supplicantUser.email
-      });
+  authModel.changePassword(rut, code, password)
+    .then((response) => {
+      if (response) {
+        res.status(200).json({
+          success: true,
+          message: `Password changed successfully.`
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          message: 'Password not changed.'
+        });
+      }
     })
     .catch(err => {
       res.status(401).json({

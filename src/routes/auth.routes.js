@@ -74,7 +74,7 @@ router.post('/login-client', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then(async (success) => {
+        .then((success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
@@ -171,13 +171,12 @@ router.post('/login-client/rut', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then(async (success) => {
+        .then((success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
             userFound.token = token;
             
-            console.log({resDeletePasscode});
             res.status(200).json({
               success: true,
               message: 'Loggin success.',
@@ -269,7 +268,7 @@ router.post('/login-provider', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then(async (success) => {
+        .then((success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);
@@ -366,7 +365,7 @@ router.post('/login-admin', (req, res) => {
     .then((userFound) => {
       if(userFound.state == 'active'){
         helpers.matchPassword(login.password, userFound.password)
-        .then(async (success) => {
+        .then((success) => {
           if(success){
             delete userFound.password;
             const token = jwt.sign({ userFound }, process.env.SECRET);

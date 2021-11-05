@@ -51,7 +51,7 @@ const swaggerOptions = {
 const swaggerDocument = swaggerJsDoc(swaggerOptions);
 
 // Middlewares
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 app.use(express.urlencoded({
   extended: true
 }));

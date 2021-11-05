@@ -3,6 +3,7 @@ const router = express.Router();
 const authModel = require('../models/auth.model');
 const jwt = require('jsonwebtoken');
 const helpers = require('../libs/helpers');
+const nodemailer = require('nodemailer');
 
 router.get('/', (req, res) => {
   res.send(200).json({
@@ -439,8 +440,6 @@ router.post('/recover-account', (req, res) => {
   authModel.genPassCode(rut)
     .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador, de lo contrario userFound = NULL.
       // enviamos el código al email del usuario y notificamos al front que se le ha enviado el código.
-
-      console.log({supplicantUser});
       const firstname = supplicantUser.firstname;
       const lastName = supplicantUser.lastName;
       const email = supplicantUser.email || userFound.email;
@@ -669,7 +668,7 @@ router.post('/recover-account', (req, res) => {
 
       const transporter = nodemailer.createTransport({
         host: 'mail.somosoppa.cl',
-        port: 465,
+        port: 587,
         secure: false,
         auth: {
           user: 'cuentas@somosoppa.cl',

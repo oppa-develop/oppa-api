@@ -439,9 +439,11 @@ router.post('/recover-account', (req, res) => {
   authModel.genPassCode(rut)
     .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador, de lo contrario userFound = NULL.
       // enviamos el código al email del usuario y notificamos al front que se le ha enviado el código.
-      const firstname = supplicantUser[0].firstname;
-      const lastName = supplicantUser[0].lastName;
-      const email = supplicantUser[0].email;
+
+      console.log({supplicantUser});
+      const firstname = supplicantUser.firstname;
+      const lastName = supplicantUser.lastName;
+      const email = supplicantUser.email || userFound.email;
       const contentHTML = `<!doctype html>
       <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
         xmlns:o="urn:schemas-microsoft-com:office:office">

@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const TransaccionCompleta = require('transbank-sdk').TransaccionCompleta;
+const dayjs = require('dayjs');
 
 router.post('/create', async (req, res) => {
-  let buyOrder = "O-" + Math.floor(Math.random() * 10000) + 1;
-  let sessionId = "S-" + Math.floor(Math.random() * 10000) + 1;
+  let buyOrder = "CL" + dayjs().format('YYYYMMDDHHmmss');
+  let sessionId = "S-" + dayjs().format('YYYYMMDDHHmmss');
 
   const {
     cvv,

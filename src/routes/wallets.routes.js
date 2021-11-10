@@ -83,13 +83,16 @@ router.post('/new-movement', async (req, res) => {
     created_at: new Date(),
     users_user_id: user_id
   }
+  
+  let buyOrder = "CLTBK" + dayjs().format('YYYYMMDDHHmmss');
 
   walletsModel.updateCredits(movement)
     .then(credits => {
       res.status(200).json({
         success: true,
         message: 'Credits modified successfully.',
-        credits
+        credits,
+        buyOrder
       });
     })
     .catch(err => {

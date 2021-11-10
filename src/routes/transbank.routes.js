@@ -4,7 +4,7 @@ const TransaccionCompleta = require('transbank-sdk').TransaccionCompleta;
 const dayjs = require('dayjs');
 
 router.post('/create', async (req, res) => {
-  let buyOrder = "CL" + dayjs().format('YYYYMMDDHHmmss');
+  let buyOrder = "CLTBK" + dayjs().format('YYYYMMDDHHmmss');
   let sessionId = "S-" + dayjs().format('YYYYMMDDHHmmss');
 
   const {
@@ -15,21 +15,21 @@ router.post('/create', async (req, res) => {
     amount,
     type
   } = req.body
-  
+
   console.log(req.body)
 
   try {
-    const createResponse = (type === 'credit') ? 
-      await TransaccionCompleta.Transaction.create( buyOrder, sessionId, amount, cvv, cardNumber, year + "/" + month ) : 
-      await TransaccionCompleta.Transaction.create( buyOrder, sessionId, amount, undefined, cardNumber, year + "/" + month );
-  
+    const createResponse = (type === 'credit') ?
+      await TransaccionCompleta.Transaction.create(buyOrder, sessionId, amount, cvv, cardNumber, year + "/" + month) :
+      await TransaccionCompleta.Transaction.create(buyOrder, sessionId, amount, undefined, cardNumber, year + "/" + month);
+
     let transactionData = {
       buyOrder,
       sessionId,
       amount,
       createResponse,
     };
-    
+
     res.status(200).json({
       success: true,
       message: 'Se creó la transacción con el objetivo de obtener un identificador único.',
@@ -51,7 +51,7 @@ router.post('/confirm', async (req, res) => {
   } = req.body
 
   const confirmResponse = await TransaccionCompleta.Transaction.commit(transactionToken);
-  
+
   res.status(200).json({
     success: true,
     message: 'Transacción confirmada correctamente.',

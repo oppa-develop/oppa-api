@@ -122,4 +122,32 @@ const paymentModel = require('../models/payments.model');
     });
 });
 
+/**
+ * @swagger
+ * /payments/:
+ *  get:
+ *    tags:
+ *    - name: payments
+ *    description: Get all payments
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all payments.
+ */
+ router.get('/', /* verifyRole.admin, */ (req, res) => {
+  paymentModel.getPayments()
+    .then(payments => {
+      res.status(200).json({
+        success: true,
+        message: 'all payments.',
+        payments
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
 module.exports = router;

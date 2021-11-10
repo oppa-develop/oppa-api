@@ -95,7 +95,7 @@ const paymentModel = require('../models/payments.model');
  *      '401':
  *        description: Error. Unauthorized action.
  */
- router.post('/edit-payment', async (req, res) => {
+ router.patch('/edit-payment', async (req, res) => {
   const {
     payment_id,
     state,

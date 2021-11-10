@@ -24,6 +24,9 @@ const paymentModel = require('../models/payments.model');
  *              provider_id:
  *                type: number
  *                example: 3
+ *              client_id:
+ *                type: number
+ *                example: 3
  *              buyOrder:
  *                type: string
  *                example: CLTBK20211105
@@ -38,6 +41,7 @@ const paymentModel = require('../models/payments.model');
     amount,
     state,
     provider_id,
+    client_id,
     buyOrder
   } = req.body;
   const newPayment = {
@@ -46,6 +50,7 @@ const paymentModel = require('../models/payments.model');
     created_at: new Date(),
     updated_at: new Date(),
     providers_provider_id: provider_id,
+    clients_client_id: client_id,
     buyOrder
   };
 

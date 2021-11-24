@@ -6,6 +6,7 @@ chatsModel.createChat = async (newChat, users_ids) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
+    console.log(conn.format('INSERT INTO chats SET ?', [newChat]))
     const [chat] = await conn.query('INSERT INTO chats SET ?', [newChat])
     let new_user_has_chat = []
     for await (let id of users_ids) {
@@ -14,6 +15,7 @@ chatsModel.createChat = async (newChat, users_ids) => {
         chat.insertId
       ])
     }
+    console.log(conn.format('INSERT INTO users_has_chats (users_user_id, chats_chat_id) VALUES ?', [new_user_has_chat]), { new_user_has_chat });
     await conn.query('INSERT INTO users_has_chats (users_user_id, chats_chat_id) VALUES ?', [new_user_has_chat])
     await conn.commit();
     return chat

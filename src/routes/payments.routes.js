@@ -27,6 +27,9 @@ const paymentModel = require('../models/payments.model');
  *              client_id:
  *                type: number
  *                example: 3
+ *              service_id:
+ *                type: number
+ *                example: 3
  *              buyOrder:
  *                type: string
  *                example: CLTBK20211105
@@ -42,6 +45,7 @@ const paymentModel = require('../models/payments.model');
     state,
     provider_id,
     client_id,
+    service_id,
     buyOrder
   } = req.body;
   const newPayment = {
@@ -51,11 +55,13 @@ const paymentModel = require('../models/payments.model');
     updated_at: new Date(),
     providers_provider_id: provider_id,
     clients_client_id: client_id,
+    services_service_id: service_id,
     buyOrder
   };
 
   paymentModel.registerPayment(newPayment)
     .then(payment => {
+      console.log({payment});
       res.status(200).json({
         success: true,
         message: 'Payment registered successfully.',
@@ -63,6 +69,7 @@ const paymentModel = require('../models/payments.model');
       });
     })
     .catch(err => {
+      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -115,6 +122,7 @@ const paymentModel = require('../models/payments.model');
       });
     })
     .catch(err => {
+      console.log(err);
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -139,6 +147,44 @@ const paymentModel = require('../models/payments.model');
       res.status(200).json({
         success: true,
         message: 'all payments.',
+        payments
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /payments/{provider_id}:
+ *  get:
+ *    tags:
+ *    - name: payments
+ *    description: Get all payments of a provider
+ *    parameters:
+ *    - in: path
+ *      name: provider_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all payments of a provider.
+ */
+ router.get('/:provider_id', /* verifyRole.admin, */ (req, res) => {
+  const {
+    provider_id
+  } = req.params;
+  
+  paymentModel.getPaymentsByProviderId(provider_id)
+    .then(payments => {
+      res.status(200).json({
+        success: true,
+        message: `all payments of provider with provider_id = ${provider_id}.`,
         payments
       });
     })

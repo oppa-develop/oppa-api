@@ -1015,8 +1015,6 @@ router.post('/schedule2', async (req, res) => {
     price
   }
 
-  console.table(scheduleData)
-
   servicesModel.scheduleService(scheduleData)
     .then(scheduleService => {
       
@@ -1289,6 +1287,7 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
       });
     })
     .catch(err => {
+      console.log(err)
       res.status(500).json({
         success: false,
         message: err.code || err.message

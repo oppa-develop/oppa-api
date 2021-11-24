@@ -91,6 +91,19 @@ usersModel.checkDuplicates = async (rut, email) => {
   }
 }
 
+usersModel.checkIsElder = async (client_id) => {
+  let conn = null
+  try {
+    conn = await pool.getConnection()
+    const [elder] = await conn.query('SELECT * FROM clients_has_clients WHERE senior_client_id', [client_id]);
+    return elder
+  } catch (error) {
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
+}
+
 usersModel.createElder = async (newUser, user_client_id) => {
   let conn = null;
 
@@ -124,21 +137,20 @@ usersModel.createClient = async (newUser) => {
 
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  if (dupEntry?.length > 1) {
-    throw new Error('The new userData is duplicate')
-  } else if (dupEntry?.length === 1 && dupEntry.email) {
+
+  if (dupEntry && !dupEntry?.client_id) { // si el usuario ya existe y no es un cliente, lo asignamos como cliente
     // create client id
     conn = await pool.getConnection();
     await conn.beginTransaction();
     await conn.query("INSERT INTO clients SET ?", [{
-      users_user_id: dupEntry[0].user_id
+      users_user_id: dupEntry.user_id
     }]);
-    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry.user_id])
     await conn.commit();
     return finalUserData[0]
-  } else if (dupEntry?.length === 1 && !dupEntry.email) {
+  } else if (dupEntry && dupEntry?.client_id) { // si el usuario ya existe, denegamos la creación de un nuevo cliente
     throw new Error('Elders can not have another role')
-  } else {
+  } else { // si el usuario no existe, lo creamos
     try {
       conn = await pool.getConnection();
       await conn.beginTransaction();
@@ -163,21 +175,22 @@ usersModel.createProvider = async (newUser) => {
 
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  if (dupEntry?.length > 1) {
-    throw new Error('The new userData is duplicate')
-  } else if (dupEntry?.length === 1 && dupEntry.email) {
+  // verificamos que el usuario no sea elder
+  const elder = await usersModel.checkIsElder(dupEntry?.client_id)
+
+  if (dupEntry?.email && elder.length === 0) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
     // create provider id
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    await conn.query("INSERT INTO providers SET ?", [{
-      users_user_id: dupEntry[0].user_id
-    }]);
-    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry[0].user_id])
-    await conn.commit();
+
+    await conn.query("INSERT INTO providers SET ?", [{users_user_id: dupEntry.user_id}]);
+    const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry.user_id])
+    await conn.commit(); 
+
     return finalUserData[0]
-  } else if (dupEntry?.length === 1 && !dupEntry.email) {
+  } else if (elder.length) { // si el usuario ya existe y es un elder, denegamos la creación de un nuevo proveedor
     throw new Error('Elders can not have another role')
-  } else {
+  } else { // si el usuario no existe, lo creamos
     try {
       conn = await pool.getConnection();
       await conn.beginTransaction();

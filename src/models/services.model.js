@@ -5,12 +5,12 @@ const pool = require('../libs/database');
 let servicesModel = {};
 
 servicesModel.getServices = async () => {
-  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, services.state, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description' FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id`);
+  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, services.state, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id`);
   return services
 }
 
 servicesModel.getServicesQuantityByState = async () => {
-  const [services] = await pool.query(`SELECT services.title, categories.title AS 'category', super_categories.title AS 'supercategory', scheduled_services.state, count(*) AS 'quantity' FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY services.title, scheduled_services.state;`);
+  const [services] = await pool.query(`SELECT services.title, categories.title AS 'category', super_categories.title AS 'supercategory', scheduled_services.state, count(*) AS 'quantity', commission FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY services.title, scheduled_services.state;`);
   return services
 }
 
@@ -93,14 +93,32 @@ servicesModel.cancelRequest = async (id) => {
   return 'ok'
 }
 
-servicesModel.scheduleService = async (data) => {
-  const [row] = await pool.query('INSERT INTO scheduled_services SET ?', [data])
-  const [scheduleService] = await pool.query('SELECT * FROM scheduled_services WHERE scheduled_services_id=?', [row.insertId])
-  return scheduleService[0]
+
+servicesModel.scheduleService = async (scheduleData, registerPaymentData) => {
+  let conn = null;
+  
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    const [row] = await pool.query('INSERT INTO scheduled_services SET ?', [scheduleData])
+    const [scheduleService] = await pool.query('SELECT * FROM scheduled_services WHERE scheduled_services_id=?', [row.insertId])
+
+    registerPaymentData.scheduled_services_scheduled_services_id = scheduleService[0].scheduled_services_id
+    registerPaymentData.created_at = scheduleService[0].created_at
+
+    const [row2] = await conn.query('INSERT INTO payments SET ?;', [registerPaymentData]);
+    await conn.commit();
+    return scheduleService[0]
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
 }
 
 servicesModel.getServicesBySuperCategoryTitle = async (super_category_title) => {
-  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description' FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE super_categories.title = ?`, [super_category_title]);
+  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE super_categories.title = ?`, [super_category_title]);
   return services
 }
 
@@ -120,7 +138,7 @@ servicesModel.getBasicServices = async () => {
 }
 
 servicesModel.getServicesByCategoryId = async (id) => {
-  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description' FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE category_id=?`, [id]);
+  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE category_id=?`, [id]);
   return services
 }
 
@@ -142,7 +160,7 @@ servicesModel.givePermission = async (service) => {
 }
 
 servicesModel.getServicesHistory = async (client_id) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ? ORDER BY scheduled_services_id DESC;`, [client_id]);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id, commission FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE clients_client_id = ? ORDER BY scheduled_services_id DESC;`, [client_id]);
   for await (let service of services) {
     [provider] = await pool.query(`SELECT providers.provider_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN providers ON users.user_id = providers.users_user_id WHERE providers.provider_id = ?;`, service.providers_provider_id);
     service.provider = provider[0];
@@ -151,7 +169,7 @@ servicesModel.getServicesHistory = async (client_id) => {
 }
 
 servicesModel.getProviderServicesByDate = async (provider_id, date) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date BETWEEN ? AND ? ORDER BY scheduled_services_id DESC;`, [provider_id, date + ' 00:00:00', date + ' 23:59:59']);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.title, services.description, services.price, services.isBasic, services.img_url, services.categories_category_id, commission FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date BETWEEN ? AND ? ORDER BY scheduled_services_id DESC;`, [provider_id, date + ' 00:00:00', date + ' 23:59:59']);
   for await (let service of services) {
     [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
     [address] = await pool.query(`SELECT * FROM addresses WHERE address_id = ?`, service.addresses_address_id);
@@ -225,7 +243,7 @@ servicesModel.provideService = async (serviceToProvide, locationToProvide) => {
 }
 
 servicesModel.getServicesBySuperCategoryId = async (id) => {
-  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description' FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE super_category_id=?`, [id]);
+  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE super_category_id=?`, [id]);
   return services
 }
 

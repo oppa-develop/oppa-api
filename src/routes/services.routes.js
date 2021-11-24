@@ -1000,7 +1000,8 @@ router.post('/schedule2', async (req, res) => {
     addresses_address_id,
     addresses_users_user_id,
     state,
-    price
+    price,
+    registerPaymentData
   } = req.body
   const scheduleData = {
     clients_client_id,
@@ -1015,9 +1016,8 @@ router.post('/schedule2', async (req, res) => {
     price
   }
 
-  servicesModel.scheduleService(scheduleData)
+  servicesModel.scheduleService(scheduleData, registerPaymentData)
     .then(scheduleService => {
-      
       res.status(200).json({
         success: true,
         message: 'Service schedule successfully',
@@ -1025,6 +1025,7 @@ router.post('/schedule2', async (req, res) => {
       });
     })
     .catch(err => {
+      console.log({err})
       res.status(400).json({
         success: false,
         message: err

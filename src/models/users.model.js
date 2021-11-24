@@ -107,9 +107,9 @@ usersModel.checkIsElder = async (client_id) => {
 usersModel.createElder = async (newUser, user_client_id) => {
   let conn = null;
 
-  // verificamos que el usuario no exista previamente en la bdd
-  await usersModel.checkDuplicates(newUser.rut, newUser.email)
   try {
+    // verificamos que el usuario no exista previamente en la bdd
+    await usersModel.checkDuplicates(newUser.rut, newUser.email)
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [userData] = await conn.query("INSERT INTO users SET ?", [newUser]);

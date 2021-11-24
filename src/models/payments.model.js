@@ -1,3 +1,4 @@
+const dayjs = require('dayjs');
 const pool = require('../libs/database');
 let paymentModel = {};
 
@@ -79,7 +80,10 @@ paymentModel.getPaymentsByProviderId = async (provider_id) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    const [payments] = await conn.query('SELECT * FROM payments WHERE providers_provider_id = ? ORDER BY payment_id DESC;', [provider_id]);
+    const date = dayjs().startOf('month').format('YYYY-MM-DD');
+    const date2 = dayjs().endOf('month').format('YYYY-MM-DD') + ' 23:59:59';
+    
+    const [payments] = await conn.query(`SELECT * FROM payments WHERE providers_provider_id = ? AND created_at >= ? AND created_at <= ? OR state = 'en proceso' OR state = 'por pagar' ORDER BY payment_id DESC;`, [provider_id, date, date2]);
 
     for await (const pay of payments) {
       const [provider] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE provider_id = ?;', [pay.providers_provider_id]);

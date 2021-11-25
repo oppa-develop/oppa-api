@@ -286,6 +286,7 @@ router.get('/history/provider/:provider_id', /* verifyRole.admin, */ (req, res) 
       });
     })
     .catch(err => {
+      console.log({err})
       res.status(500).json({
         success: false,
         message: err.message
@@ -1335,6 +1336,7 @@ router.patch('/scheduled/change-state', async (req, res) => {
       });
     })
     .catch(err => {
+      console.log({err})
       res.status(500).json({
         success: false,
         message: err.code || err.message

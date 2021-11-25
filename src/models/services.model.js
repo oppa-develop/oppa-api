@@ -180,7 +180,7 @@ servicesModel.getProviderServicesByDate = async (provider_id, date) => {
 }
 
 servicesModel.getProviderServicesHistory = async (provider_id, date) => {
-  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.* FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date <= ? ORDER BY scheduled_services_id DESC;`, [provider_id, date]);
+  const [services] = await pool.query(`SELECT provider_has_services.providers_provider_id, scheduled_services.*, services.service_id, services.title, services.description, services.price, services.img_url, services.categories_category_id, services.commission FROM scheduled_services INNER JOIN provider_has_services ON scheduled_services.provider_has_services_provider_has_services_id = provider_has_services.provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id WHERE provider_has_services.providers_provider_id = ? AND date <= ? ORDER BY scheduled_services_id DESC;`, [provider_id, date]);
   for await (let service of services) {
     [client] = await pool.query(`SELECT clients.client_id, users.firstname, users.lastname, users.email, users.img_url, users.phone FROM users LEFT JOIN clients ON users.user_id = clients.users_user_id WHERE clients.client_id = ?;`, service.clients_client_id);
     [address] = await pool.query(`SELECT * FROM addresses WHERE address_id = ?`, service.addresses_address_id);
@@ -318,8 +318,37 @@ servicesModel.rankService = async (data) => {
 }
 
 servicesModel.changeScheduleServiceState = async (scheduledService) => {
-  const [res] = await pool.query('UPDATE scheduled_services SET state = ? WHERE scheduled_services_id = ?', [scheduledService.state, scheduledService.scheduled_services_id])
-  return res
+  
+  let conn = null;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    const [res] = await conn.query('UPDATE scheduled_services SET state = ? WHERE scheduled_services_id = ?', [scheduledService.state, scheduledService.scheduled_services_id])
+console.log('scheduledService.state:', scheduledService.state)
+    let state = null
+    switch (scheduledService.state.toLowerCase()) {
+      case 'terminado':
+        state = 'por pagar'
+        break
+      case 'cancelado':
+        state = 'cancelado'
+        break
+      case 'agendado':
+        state = 'en proceso'
+        break
+    }
+console.log('state:', state)
+
+    if (state) await conn.query('UPDATE payments SET state = ? WHERE scheduled_services_scheduled_services_id = ?', [state, scheduledService.scheduled_services_id])
+
+    await conn.commit();
+    return res
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
 }
 
 servicesModel.deleteServicesOfferedByProviderIdAndProviderHasServicesId = async (provider_id, provider_has_services_id) => {

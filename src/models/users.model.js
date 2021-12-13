@@ -176,9 +176,12 @@ usersModel.createProvider = async (newUser) => {
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
   // verificamos que el usuario no sea elder
-  const elder = await usersModel.checkIsElder(dupEntry?.client_id)
+  let elder
+  if (dupEntry?.length) elder = await usersModel.checkIsElder(dupEntry?.client_id)
 
-  if (dupEntry?.email && elder.length === 0) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
+  console.log({elder})
+
+  if (dupEntry?.email && elder?.length === 0) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
     // create provider id
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -188,7 +191,7 @@ usersModel.createProvider = async (newUser) => {
     await conn.commit(); 
 
     return finalUserData[0]
-  } else if (elder.length) { // si el usuario ya existe y es un elder, denegamos la creación de un nuevo proveedor
+  } else if (elder?.length) { // si el usuario ya existe y es un elder, denegamos la creación de un nuevo proveedor
     throw new Error('Elders can not have another role')
   } else { // si el usuario no existe, lo creamos
     try {

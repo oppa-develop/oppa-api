@@ -49,8 +49,11 @@ servicesModel.getPotentialServices = async (potentialProviders, service_id, regi
       // borramos la data sensible
       delete provider.password;
       delete provider.token;
+
+      console.log(pool.format(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND (provider_has_services.gender = 'Unisex' OR provider_has_services.gender = ?);`, [provider.provider_id, service_id, gender]))
   
-      const [provider_has_services] = await pool.query(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND provider_has_services.gender = ? OR provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND (provider_has_services.gender = 'Unisex' OR provider_has_services.gender = ?);`, [provider.provider_id, service_id, gender, provider.provider_id, service_id, gender]);
+      const [provider_has_services] = await pool.query(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND (provider_has_services.gender = 'Unisex' OR provider_has_services.gender = ?);`, [provider.provider_id, service_id, gender]);
+
       provider_has_services.filter(async provider_has_service => {
         // obtenemos la locación definida por el proveedor para este servicio, filtrada por region, comuna y género
         const [location] = await pool.query(`SELECT * FROM locations WHERE locations.provider_has_services_provider_has_services_id = ? AND locations.region = ? AND (locations.district = ? OR locations.district IS NULL);`, [provider_has_service.provider_has_services_id, region, district]);
@@ -73,8 +76,14 @@ servicesModel.getPotentialServices = async (potentialProviders, service_id, regi
         if (filters.date && filters.hour) potentialServices.push(provider_has_service)
         if (i === potentialProviders.length - 1) resolve(potentialServices)
         i++
+
+        // devolvemos los filtros a estado false
+        filters.date = false;
+        filters.hour = false;
       })
+
     }
+    console.log({potentialProviders})
   })
 }
 

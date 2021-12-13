@@ -797,6 +797,8 @@ router.get('/:service_id/potential-providers/region/:region/district/:district/d
     gender
   } = req.params;
 
+  console.log(req.params)
+  
   try {
     // obtenemos los proveedores que ofrecen ese servicio
     const potentialProviders = await servicesModel.getPotentialProviders(service_id, region, district, date, hour, gender)

@@ -10,14 +10,14 @@ servicesModel.getServices = async () => {
 }
 
 servicesModel.getServicesQuantityByState = async () => {
-  const [services] = await pool.query(`SELECT services.title, categories.title AS 'category', super_categories.title AS 'supercategory', scheduled_services.state, count(*) AS 'quantity', commission FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY services.title, scheduled_services.state;`);
+  const [services] = await pool.query(`SELECT services.title, MIN(categories.title) AS 'category', MIN(super_categories.title) AS 'supercategory', scheduled_services.state, count(*) AS 'quantity', MIN(commission) FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY services.title, scheduled_services.state;`);
   return services
 }
 
 servicesModel.getPotentialProviders = async (service_id, region, district, date, hour, gender) => {
 
   // buscamos todos los proveedores que ofrecen ese servicio actualmente
-  let [providers] = await pool.query(`SELECT admin_id, client_id, provider_id, users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ? GROUP BY providers.provider_id;`, [service_id]);
+  let [providers] = await pool.query(`SELECT MIN(admin_id), MIN(client_id), MIN(provider_id), users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ? GROUP BY providers.provider_id;`, [service_id]);
 
   return providers
 }
@@ -30,7 +30,7 @@ servicesModel.getLastServicesRequested = async () => {
 
 servicesModel.getMostRequestedServices = async (limit) => {
   limit = parseInt(limit)
-  let [mostRequestedServices] = await pool.query(`SELECT services.title, categories.title AS 'category', super_categories.title AS 'supercategory', count(*) AS 'quantity', services.img_url FROM oppaAWS.scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY category, services.title ORDER BY quantity DESC LIMIT ?;`, [limit])
+  let [mostRequestedServices] = await pool.query(`SELECT MIN(services.title), MIN(categories.title) AS 'category', MIN(super_categories.title) AS 'supercategory', count(*) AS 'quantity', MIN(services.img_url) FROM scheduled_services INNER JOIN provider_has_services ON provider_has_services.provider_has_services_id = scheduled_services.provider_has_services_provider_has_services_id INNER JOIN services ON provider_has_services.services_service_id = services.service_id INNER JOIN categories ON categories.category_id = services.categories_category_id INNER JOIN super_categories ON super_categories.super_category_id = categories.super_categories_super_category_id GROUP BY categories.title, services.title ORDER BY quantity DESC LIMIT ?;`, [limit])
 
   return mostRequestedServices
 }

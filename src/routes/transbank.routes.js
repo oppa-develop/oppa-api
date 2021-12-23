@@ -119,6 +119,7 @@ router.post('/pay', (req,res) => {
 
   WebpayPlus.Transaction.create(buy_order, session_id, amount, return_url)
     .then(response => {
+      console.log('/pay response:', response);
       res.status(200).send(response);
     })
     .catch(err => {
@@ -151,6 +152,7 @@ router.post('/check', (req,res) => {
 
   WebpayPlus.Transaction.commit(token_ws)
     .then(response => {
+      console.log('/check response:', response);
       res.status(200).send('<script>window.close();</script>')
     })
     .catch(err => {
@@ -175,6 +177,7 @@ router.post('/check', (req,res) => {
 
   WebpayPlus.Transaction.status(token_ws)
     .then(response => {
+      console.log('/voucher response:', response);
       res.status(200).send(response)
     })
     .catch(err => {

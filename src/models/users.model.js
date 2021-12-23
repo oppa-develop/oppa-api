@@ -138,7 +138,7 @@ usersModel.createClient = async (newUser) => {
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
 
-  if (dupEntry && !dupEntry?.client_id) { // si el usuario ya existe y no es un cliente, lo asignamos como cliente
+  if (dupEntry?.email && !elder) { // si el usuario ya existe y no es un cliente, lo asignamos como cliente
     // create client id
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -181,7 +181,7 @@ usersModel.createProvider = async (newUser) => {
 
   console.log({elder})
 
-  if (dupEntry?.email && elder?.length === 0) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
+  if (dupEntry?.email && !elder) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
     // create provider id
     conn = await pool.getConnection();
     await conn.beginTransaction();

@@ -134,23 +134,25 @@ usersModel.createElder = async (newUser, user_client_id) => {
 
 usersModel.createClient = async (newUser) => {
   let conn = null;
+  let isClient
+
+  conn = await pool.getConnection();
+  await conn.beginTransaction();
 
   // verificamos que el usuario no exista previamente en la bdd
-  let elder
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
+  // verificamos que el usuario no sea elder o cliente
+  if (dupEntry?.rut) isClient = await conn.query('SELECT * FROM clients WHERE users_user_id = ?', [dupEntry?.user_id])
 
-  if (dupEntry?.email && !elder) { // si el usuario ya existe y no es un cliente, lo asignamos como cliente
-    // create client id
-    conn = await pool.getConnection();
-    await conn.beginTransaction();
+  if (isClient) throw new Error('Duplicate entry') // si existe en la tabla de clientes, lanzamos un error
+
+  if (dupEntry?.email) { // si el usuario ya existe y no es un cliente, lo asignamos como cliente
     await conn.query("INSERT INTO clients SET ?", [{
       users_user_id: dupEntry.user_id
     }]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry.user_id])
     await conn.commit();
     return finalUserData[0]
-  } else if (dupEntry && dupEntry?.client_id) { // si el usuario ya existe, denegamos la creación de un nuevo cliente
-    throw new Error('Elders can not have another role')
   } else { // si el usuario no existe, lo creamos
     try {
       conn = await pool.getConnection();
@@ -188,7 +190,7 @@ usersModel.createProvider = async (newUser) => {
   console.log('isProvider', isProvider)
   console.log('dupEntry', dupEntry)
 
-  if (isProvider) throw new Error('Duplicate entry') // si existe en la tabla de clientes, lanzamos un error
+  if (isProvider) throw new Error('Duplicate entry') // si existe en la tabla de proveedores, lanzamos un error
   if (elder) throw new Error('Elders can not have another role') // si existe en la tabla de clientes, lanzamos un error
     
   if (dupEntry.email && !elder) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor

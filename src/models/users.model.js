@@ -136,6 +136,7 @@ usersModel.createClient = async (newUser) => {
   let conn = null;
 
   // verificamos que el usuario no exista previamente en la bdd
+  let elder
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
 
   if (dupEntry?.email && !elder) { // si el usuario ya existe y no es un cliente, lo asignamos como cliente
@@ -172,27 +173,30 @@ usersModel.createClient = async (newUser) => {
 
 usersModel.createProvider = async (newUser) => {
   let conn = null;
+  let elder, isProvider
+
+  conn = await pool.getConnection();
+  await conn.beginTransaction();
 
   // verificamos que el usuario no exista previamente en la bdd
   const [dupEntry] = await usersModel.checkDuplicates(newUser.rut, newUser.email)
-  // verificamos que el usuario no sea elder
-  let elder
-  if (dupEntry?.length) elder = await usersModel.checkIsElder(dupEntry?.client_id)
+  // verificamos que el usuario no sea elder o cliente
+  if (dupEntry?.rut) {
+    elder = await usersModel.checkIsElder(dupEntry?.client_id)
+    isProvider = await conn.query('SELECT * FROM providers WHERE users_user_id = ?', [dupEntry?.user_id])
+  }
+  console.log('isProvider', isProvider)
+  console.log('dupEntry', dupEntry)
 
-  console.log({elder})
-
-  if (dupEntry?.email && !elder) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
-    // create provider id
-    conn = await pool.getConnection();
-    await conn.beginTransaction();
-
+  if (isProvider) throw new Error('Duplicate entry') // si existe en la tabla de clientes, lanzamos un error
+  if (elder) throw new Error('Elders can not have another role') // si existe en la tabla de clientes, lanzamos un error
+    
+  if (dupEntry.email && !elder) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
     await conn.query("INSERT INTO providers SET ?", [{users_user_id: dupEntry.user_id}]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry.user_id])
     await conn.commit(); 
 
     return finalUserData[0]
-  } else if (elder?.length) { // si el usuario ya existe y es un elder, denegamos la creación de un nuevo proveedor
-    throw new Error('Elders can not have another role')
   } else { // si el usuario no existe, lo creamos
     try {
       conn = await pool.getConnection();

@@ -95,7 +95,8 @@ usersModel.checkIsElder = async (client_id) => {
   let conn = null
   try {
     conn = await pool.getConnection()
-    const [elder] = await conn.query('SELECT * FROM clients_has_clients WHERE senior_client_id', [client_id]);
+    const [elder] = await conn.query('SELECT * FROM clients_has_clients WHERE senior_client_id = ?', [client_id]);
+    console.log('elder', elder)
     return elder
   } catch (error) {
     throw error;
@@ -190,10 +191,12 @@ usersModel.createProvider = async (newUser) => {
   console.log('isProvider', isProvider)
   console.log('dupEntry', dupEntry)
 
-  if (isProvider) throw new Error('Duplicate entry') // si existe en la tabla de proveedores, lanzamos un error
-  if (elder) throw new Error('Elders can not have another role') // si existe en la tabla de clientes, lanzamos un error
+  if (isProvider.provider_id) throw new Error('Duplicate entry') // si existe en la tabla de proveedores, lanzamos un error
+  if (elder.length) throw new Error('Elders can not have another role') // si existe en la tabla de proveedores, lanzamos un error
+
+  console.log('****************************************************************************', dupEntry?.email, elder)
     
-  if (dupEntry.email && !elder) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
+  if (dupEntry?.email) { // si el usuario ya existe y no es un elder, lo asignamos como proveedor
     await conn.query("INSERT INTO providers SET ?", [{users_user_id: dupEntry.user_id}]);
     const [finalUserData] = await conn.query('SELECT admin_id, client_id, provider_id, users.* FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE user_id=?;', [dupEntry.user_id])
     await conn.commit(); 

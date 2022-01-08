@@ -191,8 +191,8 @@ usersModel.createProvider = async (newUser) => {
   console.log('isProvider', isProvider)
   console.log('dupEntry', dupEntry)
 
-  if (isProvider.provider_id) throw new Error('Duplicate entry') // si existe en la tabla de proveedores, lanzamos un error
-  if (elder.length) throw new Error('Elders can not have another role') // si existe en la tabla de proveedores, lanzamos un error
+  if (isProvider?.provider_id) throw new Error('Duplicate entry') // si existe en la tabla de proveedores, lanzamos un error
+  if (elder?.length) throw new Error('Elders can not have another role') // si existe en la tabla de proveedores, lanzamos un error
 
   console.log('****************************************************************************', dupEntry?.email, elder)
     

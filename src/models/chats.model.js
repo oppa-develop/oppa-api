@@ -41,7 +41,7 @@ chatsModel.getChatsByUserId = async (user_id) => {
 }
 
 chatsModel.getMessagesByChatId = async (chat_id) => {
-  const [rows] = await pool.query("SELECT * FROM messages INNER JOIN users ON messages.users_user_id = users.user_id WHERE chats_chat_id = ? ORDER BY messages.created_at ASC;", [chat_id]);
+  const [rows] = await pool.query("SELECT message_id, text, url, type, messages.created_at, chats_chat_id, users_user_id, firstname, lastname FROM messages INNER JOIN users ON messages.users_user_id = users.user_id WHERE chats_chat_id = ? ORDER BY messages.created_at ASC;", [chat_id]);
   return rows
 }
 

@@ -700,6 +700,7 @@ router.post('/recover-account', (req, res) => {
         });
     })
     .catch(err => {
+      console.log('Error al buscar usuario', err);
       res.status(401).json({
         success: false,
         message: err.message

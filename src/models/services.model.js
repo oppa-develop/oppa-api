@@ -96,23 +96,30 @@ servicesModel.editOfferedServiceState = async (service, districts, region) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    const [update] = await pool.query(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id])
+    await pool.query(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id])
 
     // eliminamos las comunas que tenga el servicio y agregamos las nuevas
     await pool.query(`DELETE FROM locations WHERE provider_has_services_provider_has_services_id = ?`, [service.provider_has_services_id])
-    const data = districts.map(district => {
+    const locationsData = await districts.map(district => {
       return {
-        provider_has_services_provider_has_services_id: service.provider_has_services_id,
-        region: region,
-        district: district
+        district,
+        region,
+        provider_has_services_provider_has_services_id: service.provider_has_services_id
       }
     })
-    const [locations] = await pool.query(`INSERT INTO locations (provider_has_services_provider_has_services_id, region, district) VALUES ?`, [data])
+    for await (location of locationsData) {
+      console.log(pool.format('INSERT INTO locations SET ?', location))
+      await pool.query('INSERT INTO locations SET ?', location)
+    }
 
-    update.locations = locations
+    const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE provider_has_services_id = ?;", [service.provider_has_services_id]);
+    for await (let service of services) {
+      const [locations] = await pool.query('SELECT * FROM locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
+      service.locations = locations
+    }
 
     await conn.commit();
-    return update
+    return services
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

@@ -1499,7 +1499,9 @@ router.put('/offered/edit', async (req, res) => {
     providers_provider_id,
     providers_users_user_id,
     services_service_id,
-    services_categories_category_id
+    services_categories_category_id,
+    districts,
+    region
   } = req.body
   const service = {
     provider_has_services_id,
@@ -1515,7 +1517,7 @@ router.put('/offered/edit', async (req, res) => {
     services_categories_category_id
   }
 
-  servicesModel.editOfferedServiceState(service)
+  servicesModel.editOfferedServiceState(service, districts, region)
     .then(editedService => {
       res.status(200).json({
         success: true,

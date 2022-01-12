@@ -90,9 +90,33 @@ servicesModel.requestService = async (data) => {
   return requestedData
 }
 
-servicesModel.editOfferedServiceState = async (service) => {
-  const [update] = await pool.query(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id])
-  return update
+servicesModel.editOfferedServiceState = async (service, districts, region) => {
+  let conn = null;
+  
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    const [update] = await pool.query(`UPDATE provider_has_services SET ? WHERE provider_has_services_id = ?`, [service, service.provider_has_services_id])
+
+    // eliminamos las comunas que tenga el servicio y agregamos las nuevas
+    await pool.query(`DELETE FROM locations WHERE provider_has_services_provider_has_services_id = ?`, [service.provider_has_services_id])
+    const data = districts.map(district => {
+      return {
+        provider_has_services_provider_has_services_id: service.provider_has_services_id,
+        region: region,
+        district: district
+      }
+    })
+    await pool.query(`INSERT INTO locations (provider_has_services_provider_has_services_id, region, district) VALUES ?`, [data])
+
+    await conn.commit();
+    return scheduleService[0]
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
 }
 
 servicesModel.cancelRequest = async (id) => {

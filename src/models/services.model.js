@@ -107,10 +107,12 @@ servicesModel.editOfferedServiceState = async (service, districts, region) => {
         district: district
       }
     })
-    await pool.query(`INSERT INTO locations (provider_has_services_provider_has_services_id, region, district) VALUES ?`, [data])
+    const [locations] = await pool.query(`INSERT INTO locations (provider_has_services_provider_has_services_id, region, district) VALUES ?`, [data])
+
+    update.locations = locations
 
     await conn.commit();
-    return scheduleService[0]
+    return update
   } catch (error) {
     if (conn) await conn.rollback();
     throw error;

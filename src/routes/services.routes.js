@@ -62,6 +62,109 @@ router.get('/', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /services/LastRequested:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get last services requested
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing last services requested.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/LastRequested', /* verifyRole.admin, */ (req, res) => {
+  servicesModel.getLastServicesRequested()
+    .then(lastServicesRequested => {
+      res.status(200).json({
+        success: true,
+        message: 'Last services requested.',
+        lastServicesRequested
+      });
+    })
+    .catch(err => {
+      console.log(err)
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /services/MostRequested/Limit/{limit}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get most requested services.
+ *    parameters:
+ *    - in: path
+ *      name: limit
+ *      schema:
+ *        type: integer
+ *        example: 5
+ *      description: Number of registers to get.
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing most requested services.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/MostRequested/limit/:limit', /* verifyRole.admin, */ (req, res) => {
+  const {
+    limit
+  } = req.params;
+
+  servicesModel.getMostRequestedServices(limit)
+    .then(mostRequestedServices => {
+      res.status(200).json({
+        success: true,
+        message: 'Most requested services.',
+        mostRequestedServices
+      });
+    })
+    .catch(err => {
+      console.log(err)
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /services/quantityByState:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get quantity of services with each states
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing quantity of services with each states.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/', /* verifyRole.admin, */ (req, res) => {
+  servicesModel.getServicesQuantityByState()
+    .then(services => {
+      res.status(200).json({
+        success: true,
+        message: 'Quantity of services with each states.',
+        data: services
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /services/history/client/{client_id}:
  *  get:
  *    tags:
@@ -183,6 +286,7 @@ router.get('/history/provider/:provider_id', /* verifyRole.admin, */ (req, res) 
       });
     })
     .catch(err => {
+      console.log({err})
       res.status(500).json({
         success: false,
         message: err.message
@@ -458,6 +562,54 @@ router.get('/:service_id/providers', (req, res) => {
 
 /**
  * @swagger
+ * /services/sales-amounth/{start}/{end}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get sales amount for the given period.
+ *    parameters:
+ *    - in: path
+ *      name: start
+ *      schema:
+ *        type: string
+ *        example: 2021-01-01
+ *      required: true
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns sales amount for the given period.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/sales-amounth/:start/:end', (req, res) => {
+  const {
+    start,
+    end
+  } = req.params;
+
+  servicesModel.getSalesAmounth()
+    .then(data => {
+      res.status(200).json({
+        success: true,
+        message: `Sales amount for the period between ${start} and ${end}`,
+        data
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    })
+});
+
+/**
+ * @swagger
  * /services/offered/provider/{provider_id}:
  *  get:
  *    tags:
@@ -587,6 +739,107 @@ router.get('/permitted/provider/:provider_id', (req, res) => {
 
 /**
  * @swagger
+ * /services/{service_id}/potential-providers/region/{region}/district/{district}/date/{date}/hour/{hour}/gender/{gender}:
+ *  get:
+ *    tags:
+ *    - name: services
+ *    description: Get all services permitted for provider_id
+ *    parameters:
+ *    - in: path
+ *      name: service_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *      required: true
+ *    - in: path
+ *      name: region
+ *      schema:
+ *        type: string
+ *        example: 'Metropolitana de Santiago'
+ *      required: true
+ *    - in: path
+ *      name: district
+ *      schema:
+ *        type: string
+ *        example: 'recoleta'
+ *      required: true
+ *    - in: path
+ *      name: date
+ *      schema:
+ *        type: string
+ *        example: '2021-31-12'
+ *      required: true
+ *    - in: path
+ *      name: hour
+ *      schema:
+ *        type: string
+ *        example: '19:30'
+ *      required: true
+ *    - in: path
+ *      name: gender
+ *      schema:
+ *        type: string
+ *        example: 'Mujer'
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all potential providers for a specific service, date, hour and district.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+router.get('/:service_id/potential-providers/region/:region/district/:district/date/:date/hour/:hour/gender/:gender', async (req, res) => {
+  const {
+    service_id,
+    region,
+    district,
+    date,
+    hour,
+    gender
+  } = req.params;
+
+  console.log(req.params)
+  
+  try {
+    // obtenemos los proveedores que ofrecen ese servicio
+    const potentialProviders = await servicesModel.getPotentialProviders(service_id, region, district, date, hour, gender)
+    // obtenemos los servicios según los filtros recibidos
+    const potentialServices = await servicesModel.getPotentialServices(potentialProviders, service_id, region, district, date, hour, gender)
+    
+    res.status(200).json({
+      success: true,
+      message: potentialServices?.length ? 'Potential providers':'There are no providers for this configuration of solicitude',
+      potentialServices
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: err.code || err.message
+    })
+  }
+  
+  /* servicesModel.getPotentialProviders(service_id, region, district, date, hour, gender)
+    .then(providers => {
+      console.table({
+        providers: providers?.length,
+        services: providers.potentialServices
+      });
+      res.status(200).json({
+        success: true,
+        message: providers?.length ? 'Potential providers':'There are no providers for this configuration of solicitude',
+        providers
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      })
+    }) */
+});
+
+/**
+ * @swagger
  * /services/schedule:
  *  post:
  *    tags:
@@ -710,24 +963,30 @@ router.post('/schedule', async (req, res) => {
  *          schema:
  *            type: object
  *            properties:
- *              client_id:
+ *              clients_client_id:
  *                type: number
  *                example: 1
- *              user_id:
+ *              clients_users_user_id:
  *                type: number
- *                example: 2
+ *                example: 1
  *              date:
- *                type: datetime
- *                example: 2021-03-05 22:52:35
+ *                type: string
+ *                example: '2021-09-18'
  *              start:
- *                type: time
- *                example: 09:00:00
- *              end:
- *                type: time
- *                example: "18:00:00"
- *              provider_has_services_id:
+ *                type: string
+ *                example: '2021-09-18'
+ *              provider_has_services_provider_has_services_id:
  *                type: number
  *                example: 1
+ *              addresses_address_id:
+ *                type: number
+ *                example: 1
+ *              addresses_users_user_id:
+ *                type: number
+ *                example: 1
+ *              state:
+ *                type: string
+ *                example: 'Service canceled by client'
  *    responses:
  *      '200':
  *        description: Returns the new service
@@ -742,7 +1001,10 @@ router.post('/schedule2', async (req, res) => {
     start,
     provider_has_services_provider_has_services_id,
     addresses_address_id,
-    addresses_users_user_id
+    addresses_users_user_id,
+    state,
+    price,
+    registerPaymentData
   } = req.body
   const scheduleData = {
     clients_client_id,
@@ -752,19 +1014,21 @@ router.post('/schedule2', async (req, res) => {
     addresses_users_user_id,
     start,
     date,
-    state: 'agendado',
-    created_at: new Date()
+    state: state ? state : 'agendado',
+    created_at: new Date(),
+    price
   }
 
-  servicesModel.scheduleService(scheduleData)
+  servicesModel.scheduleService(scheduleData, registerPaymentData)
     .then(scheduleService => {
       res.status(200).json({
         success: true,
-        message: 'Possible new service schedule successfully',
+        message: 'Service schedule successfully',
         scheduleService
       });
     })
     .catch(err => {
+      console.log({err})
       res.status(400).json({
         success: false,
         message: err
@@ -1027,6 +1291,7 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
       });
     })
     .catch(err => {
+      console.log(err)
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -1073,6 +1338,7 @@ router.patch('/scheduled/change-state', async (req, res) => {
       });
     })
     .catch(err => {
+      console.log({err})
       res.status(500).json({
         success: false,
         message: err.code || err.message
@@ -1233,7 +1499,9 @@ router.put('/offered/edit', async (req, res) => {
     providers_provider_id,
     providers_users_user_id,
     services_service_id,
-    services_categories_category_id
+    services_categories_category_id,
+    districts,
+    region
   } = req.body
   const service = {
     provider_has_services_id,
@@ -1249,7 +1517,7 @@ router.put('/offered/edit', async (req, res) => {
     services_categories_category_id
   }
 
-  servicesModel.editOfferedServiceState(service)
+  servicesModel.editOfferedServiceState(service, districts, region)
     .then(editedService => {
       res.status(200).json({
         success: true,
@@ -1258,6 +1526,7 @@ router.put('/offered/edit', async (req, res) => {
       });
     })
     .catch(err => {
+      console.log(err)
       res.status(500).json({
         success: false,
         message: err.code || err.message

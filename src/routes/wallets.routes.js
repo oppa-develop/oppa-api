@@ -1,7 +1,7 @@
 const express = require('express');
-const { getWalletMovements } = require('../models/wallets.model');
 const router = express.Router();
 const walletsModel = require('../models/wallets.model');
+const dayjs = require('dayjs');
 
 /**
  * @swagger
@@ -75,8 +75,7 @@ router.post('/new-movement', async (req, res) => {
   const {
     amount,
     type,
-    user_id,
-    scheduleServiceData
+    user_id
   } = req.body;
   const movement = {
     amount,
@@ -84,16 +83,19 @@ router.post('/new-movement', async (req, res) => {
     created_at: new Date(),
     users_user_id: user_id
   }
+  
+  let buyOrder = "CLM" + dayjs().format('YYYYMMDDHHmmss');
 
-  scheduleServiceData ? scheduleServiceData.state = 'agendado' : null;
-  scheduleServiceData ? scheduleServiceData.created_at = movement.created_at : null;
+  console.log({movement});
 
-  walletsModel.updateCredits(movement, scheduleServiceData)
+  walletsModel.updateCredits(movement)
     .then(credits => {
+      console.log({credits});
       res.status(200).json({
         success: true,
         message: 'Credits modified successfully.',
-        credits
+        credits,
+        buyOrder
       });
     })
     .catch(err => {

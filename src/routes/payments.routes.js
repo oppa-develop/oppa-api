@@ -1,29 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const cert = require('../cert/normal');
-const WebPay = require('webpay-nodejs');
-
-const wp = new WebPay({
-  commerceCode: cert.commerceCode,
-  publicKey: cert.publicKey,
-  privateKey: cert.privateKey,
-  webpayKey: cert.webpayKey,
-  verbose: true,
-  env: WebPay.ENV.INTEGRACION
-})
-
-let transaction;
-let transactions = {};
-let transactionsByToken = {};
-let url = 'https://localhost:3000/api/payments';
+const paymentModel = require('../models/payments.model');
 
 /**
  * @swagger
- * /payments/pay:
+ * /payments/new-payment:
  *  post:
  *    tags:
  *    - name: payments
- *    description: To pay a service.
+ *    description: Register a new payment
  *    requestBody:
  *      content:
  *        application/json:
@@ -31,122 +16,185 @@ let url = 'https://localhost:3000/api/payments';
  *            type: object
  *            properties:
  *              amount:
- *                type: integer
- *                example: 9990
- *              session_id:
- *                type: integer
- *                example: 1234
+ *                type: number
+ *                example: 5000
+ *              state:
+ *                type: string
+ *                example: por pagar
+ *              provider_id:
+ *                type: number
+ *                example: 3
+ *              client_id:
+ *                type: number
+ *                example: 3
+ *              service_id:
+ *                type: number
+ *                example: 3
+ *              buyOrder:
+ *                type: string
+ *                example: CLTBK20211105
  *    responses:
  *      '200':
- *        description: Carga esta url en el cliente para iniciar el pago.
+ *        description: Returns the payment registered.
  *      '401':
  *        description: Error. Unauthorized action.
  */
-router.post('/pay', (req,res) => {
-  transactions = {};
-  transactionsByToken = {};
-  var buyOrden = Date.now();
+ router.post('/new-payment', async (req, res) => {
   const {
-    amount
-  } = req.body
-  transactions[buyOrden] = {
-    amount: amount
+    amount,
+    state,
+    provider_id,
+    client_id,
+    service_id,
+    buyOrder
+  } = req.body;
+  const newPayment = {
+    amount,
+    state,
+    created_at: new Date(),
+    updated_at: new Date(),
+    providers_provider_id: provider_id,
+    clients_client_id: client_id,
+    services_service_id: service_id,
+    buyOrder
   };
 
-  /**
-   * 2. Enviamos una petición a Transbank para que genere
-   * una transacción, como resultado tendremos un token y una url.
-   *
-   * Nuestra misión es redireccionar al usuario a dicha url y token.
-   */
-  wp.initTransaction({
-    buyOrder: buyOrden,
-    // sessionId: req.sessionId,
-    returnURL: url + '/check',
-    finalURL: url + '/voucher',
-    amount: amount
-  }).then((data) => {
-    res.status(200).send({
-      url: data.url + '?token_ws=' + data.token
+  paymentModel.registerPayment(newPayment)
+    .then(payment => {
+      console.log({payment});
+      res.status(200).json({
+        success: true,
+        message: 'Payment registered successfully.',
+        payment
+      });
     })
-    // Al ser un ejemplo, se está usando GET.
-    // Transbank recomienda POST, el cual se debe hacer por el lado del cliente, obteniendo
-    // esta info por AJAX... al final es lo mismo, así que no estresarse.
-
-  });
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
 });
 
 /**
  * @swagger
- * /payments/check:
+ * /payments/edit-payment:
  *  post:
  *    tags:
  *    - name: payments
- *    description: To pay a service.
+ *    description: Edit a payment
  *    requestBody:
  *      content:
  *        application/json:
  *          schema:
  *            type: object
  *            properties:
- *              token:
+ *              payment_id:
+ *                type: number
+ *                example: 1
+ *              state:
  *                type: string
+ *                example: pagado
+ *    responses:
+ *      '200':
+ *        description: Returns the payment edited.
+ *      '401':
+ *        description: Error. Unauthorized action.
  */
-router.post('/check', (req,res) => {
-  const token = req.body.token_ws;
+ router.patch('/edit-payment', async (req, res) => {
+  const {
+    payment_id,
+    state,
+  } = req.body;
+  const paymentData = {
+    payment_id,
+    state,
+    updated_at: new Date()
+  };
 
-
-  // Si toodo está ok, Transbank realizará esta petición para que le vuelvas a confirmar la transacción.
-
-  /**
-   * 3. Cuando el usuario ya haya pagado con el banco, Transbank realizará una petición a esta url,
-   * porque así se definió en initTransaction
-   */
-  console.log('pre token', token);
-  wp.getTransactionResult(token).then((transactionResult) => {
-      console.log(transactionResult)
-      transaction = transactionResult;
-      transactions[transaction.buyOrder] = transaction;
-      transactionsByToken[token] = transactions[transaction.buyOrder];
-
-      console.log('transaction', transaction);
-      /**
-       * 4. Como resultado, obtendras transaction, que es un objeto con la información de la transacción.
-       * Independiente de si la transacción fue correcta o errónea, debes siempre
-       * hacer un llamado a acknowledgeTransaction con el token... Cosas de Transbank.
-       *
-       * Tienes 30 amplios segundos para hacer esto, sino la transacción se reversará.
-       */
-      console.log('re acknowledgeTransaction', token)
-      return wp.acknowledgeTransaction(token);
-
-    }).then((result2) => {
-      console.log('pos acknowledgeTransaction', result2);
-      // Si llegas aquí, entonces la transacción fue confirmada.
-      // Este es un buen momento para guardar la información y actualizar tus registros (disminuir stock, etc).
-
-      // Por reglamento de Transbank, debes retornar una página en blanco con el fondo
-      // psicodélico de WebPay. Debes usar este gif: https://webpay3g.transbank.cl/webpayserver/imagenes/background.gif
-      // o bien usar la librería.
-      res.send(WebPay.getHtmlTransitionPage(transaction.urlRedirection, token));
+  paymentModel.editPayment(paymentData)
+    .then(payment => {
+      res.status(200).json({
+        success: true,
+        message: 'Payment edited successfully.',
+        payment
+      });
     })
-    .catch(e => {
-      console.log("Error result2", e)
-    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
 });
 
 /**
  * @swagger
- * /payments/voucher:
- *  post:
+ * /payments/:
+ *  get:
  *    tags:
  *    - name: payments
- *    description: To pay a service.
+ *    description: Get all payments
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all payments.
  */
-router.post('/voucher', (req,res) => {
-  const transaction = transactionsByToken[req.body.token_ws];
-  console.log('Mostrar el comprobante', transaction);
-  res.send('<script>window.close();</script>')
+ router.get('/', /* verifyRole.admin, */ (req, res) => {
+  paymentModel.getPayments()
+    .then(payments => {
+      res.status(200).json({
+        success: true,
+        message: 'all payments.',
+        payments
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /payments/{provider_id}:
+ *  get:
+ *    tags:
+ *    - name: payments
+ *    description: Get all payments of a provider
+ *    parameters:
+ *    - in: path
+ *      name: provider_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing all payments of a provider.
+ */
+ router.get('/:provider_id', /* verifyRole.admin, */ (req, res) => {
+  const {
+    provider_id
+  } = req.params;
+  
+  paymentModel.getPaymentsByProviderId(provider_id)
+    .then(payments => {
+      res.status(200).json({
+        success: true,
+        message: `all payments of provider with provider_id = ${provider_id}.`,
+        payments
+      });
+    })
+    .catch(err => {
+      console.log({err})
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
 });
 
 module.exports = router;

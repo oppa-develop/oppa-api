@@ -10,7 +10,7 @@ require('dotenv').config({path: path.join(__dirname, '../.env')});
 const https = require('http');
 const fs = require('fs');
 const dayjs = require('dayjs');
-const chatsModel = require('./models/chats.model');
+const servicesModel = require('./models/services.model');
 
 // Initializations
 const app = express();
@@ -88,6 +88,7 @@ server.listen(app.get('port'), () => {
   console.log("HTTPS server listening on port " + app.get('port'));
 });
 
+// websockets configurations
 const io = require('socket.io')(server, {
   cors: {
     "origin": "*",
@@ -95,66 +96,14 @@ const io = require('socket.io')(server, {
   }
 });
 
-// Socket setup
-const servicesModel = require('./models/services.model');
-io.on('connection', (socket) => {
-  console.log('WS: User connected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
+const connectionHandlers = require("./handlers/connection.handlers");
+const chatHandlers = require("./handlers/chat.handlers");
+const notificationHandlers = require("./handlers/notification.handlers");
 
-  // se le asigna un chat según el data.chat
-  socket.on('connectToChat', data => {
-    console.log('WS: Connecting user to chat:', data.chat);
-    if (data.chat) socket.join(data.chat)
-  });
-  
-  // cuando un mensaje es recibido, se guarda el mensaje en la bdd
-  socket.on('message', data => {
-    console.log('WS: Message:', data);
-    chatsModel.saveMessage({ text: data.text, url: data.url, type: data.type, created_at: data.created_at, chats_chat_id: data.chats_chat_id, users_user_id: data.users_user_id })
-      .then(async (chatUsers) => {
-        // si se guarda correctamente, el mensaje también se envía por websockets
-        socket.to(data.chats_chat_id).broadcast.emit('message', data);
-        // notificamos al usuario del nuevo mensaje
-        data.type = 'message'
-        for await (let chatUser of chatUsers) {
-          socket.to(chatUser.users_user_id).emit('notificateClient', data)
-        }
-      })
-      .catch(err => {
-        console.log('WS:', err);
-      })
-  });
+const onConnection = (socket) => {
+  connectionHandlers(io, socket);
+  chatHandlers(io, socket);
+  notificationHandlers(io, socket);
+}
 
-  // se crea una sala para notificar al proveedor
-  socket.on('notificationsProvider', data => {
-    console.log('WS: inscribiendo notificaciones al provider:', data);
-    if (data.provider_id) socket.join(data.provider_id);
-  })
-
-  // se crea una sala para notificar al usuario
-  socket.on('notificationsProvider', data => {
-    console.log('WS: inscribiendo notificaciones al usuario:', data);
-    if (data.user_id) socket.join(data.user_id);
-  })
-
-  // se envía una notificación al proveedor
-  socket.on('notificateProvider', data => {
-    console.log('WS: notificando provider:', data.provider_id);
-    socket.to(data.provider_id).broadcast.emit('notificateProvider', data);
-  })
-
-  // se envía una notificación al usuario
-  socket.on('notificateUser', data => {
-    console.log('WS: notificando usuario', data.user_id);
-    socket.to(data.user_id).broadcast.emit('notificateUser', data);
-  })
-
-  socket.on('serviceConfirmation', data => {
-    console.log('WS: enviando confirmación de servicio al proveedor', data.provider.provider_id);
-    socket.to(data.provider.provider_id).broadcast.emit('serviceConfirmation', data);
-  })
-  
-  // acciones al desconectar
-  socket.on('disconnect', () => {
-    console.log('WS: User disconnected:', socket.handshake.query.firstname, socket.handshake.query.lastname);
-  });
-});
+io.on("connection", onConnection);

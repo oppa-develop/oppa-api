@@ -52,6 +52,48 @@ router.get('/user/:user_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /addresses/MostRequested/Limit/{limit}:
+ *  get:
+ *    tags:
+ *    - name: addresses
+ *    description: Get most requested districts.
+ *    parameters:
+ *    - in: path
+ *      name: limit
+ *      schema:
+ *        type: integer
+ *        example: 5
+ *      description: Number of registers to get.
+ *    responses:
+ *      '200':
+ *        description: Returns a list containing most requested districts.
+ *      '401':
+ *        description: Error. Unauthorized action.
+ */
+ router.get('/MostRequested/limit/:limit', /* verifyRole.admin, */ (req, res) => {
+  const {
+    limit
+  } = req.params;
+
+  addressesModel.getMostRequestedDistricts(limit)
+    .then(mostRequestedDistricts => {
+      res.status(200).json({
+        success: true,
+        message: 'Most requested districts.',
+        mostRequestedDistricts
+      });
+    })
+    .catch(err => {
+      console.log(err)
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /addresses/new-address:
  *  post:
  *    tags:
@@ -68,7 +110,10 @@ router.get('/user/:user_id', /* verifyRole.admin, */ (req, res) => {
  *                example: 1
  *              street:
  *                type: string
- *                example: Av. Recoleta #1887
+ *                example: Av. Recoleta
+ *              number:
+ *                type: integer
+ *                example: 1887
  *              other:
  *                type: string
  *                example: depto. 309
@@ -88,13 +133,14 @@ router.post('/new-address', async (req, res) => {
   const {
     users_user_id,
     street,
+    number,
     other,
     district,
     region
   } = req.body
   const address = {
     users_user_id,
-    street,
+    street: `${street.trim()} ${number.trim()}`,
     other,
     district,
     region,

@@ -181,6 +181,150 @@ router.get('/:user_id', /* verifyRole.admin, */ (req, res) => {
 
 /**
  * @swagger
+ * /users/clients/quantity/{start}/{end}:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get quantity of clients between dates.
+ *    parameters:
+ *    - in: path
+ *      name: start
+ *      schema:
+ *        type: string
+ *        example: 2021-01-01
+ *      required: true
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns quantity of clients between dates.
+ *      '404':
+ *        description: Error. User not found.
+ */
+router.get('/clients/quantity/:start/:end', /* verifyRole.admin, */ (req, res) => {
+  const {
+    start,
+    end
+  } = req.params;
+
+  usersModel.getQuanitityOfClients(start, end)
+    .then(data => {
+      res.status(200).json({
+        success: true,
+        message: `Quantity of clients between ${start} and ${end}.`,
+        data
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /users/admins/quantity/{start}/{end}:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get quantity of admins between dates.
+ *    parameters:
+ *    - in: path
+ *      name: start
+ *      schema:
+ *        type: string
+ *        example: 2021-01-01
+ *      required: true
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns quantity of admins between dates.
+ *      '404':
+ *        description: Error. User not found.
+ */
+router.get('/admins/quantity/:start/:end', /* verifyRole.admin, */ (req, res) => {
+  const {
+    start,
+    end
+  } = req.params;
+
+  usersModel.getQuanitityOfAdmins(start, end)
+    .then(data => {
+      res.status(200).json({
+        success: true,
+        message: `Quantity of admins between ${start} and ${end}.`,
+        data
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
+ * /users/providers/quantity/{start}/{end}:
+ *  get:
+ *    tags:
+ *    - name: users
+ *    description: Get quantity of providers between dates.
+ *    parameters:
+ *    - in: path
+ *      name: start
+ *      schema:
+ *        type: string
+ *        example: 2021-01-01
+ *      required: true
+ *    - in: path
+ *      name: end
+ *      schema:
+ *        type: string
+ *        example: 2021-01-31
+ *      required: true
+ *    responses:
+ *      '200':
+ *        description: Returns quantity of providers between dates.
+ *      '404':
+ *        description: Error. User not found.
+ */
+router.get('/providers/quantity/:start/:end', /* verifyRole.admin, */ (req, res) => {
+  const {
+    start,
+    end
+  } = req.params;
+
+  usersModel.getQuanitityOfProviders(start, end)
+    .then(data => {
+      res.status(200).json({
+        success: true,
+        message: `Quantity of providers between ${start} and ${end}.`,
+        data
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    });
+});
+
+/**
+ * @swagger
  * /users/{user_id}/credit:
  *  get:
  *    tags:

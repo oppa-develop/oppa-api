@@ -10,6 +10,8 @@ WebpayPlus.commerceCode = process.env.TBK_COMMERCE_CODE;
 WebpayPlus.apiKey = process.env.TBK_KEY;
 WebpayPlus.environment = process.env.TBK_ENVIRONMENT;
 
+WebpayPlus.configureForProduction(process.env.TBK_COMMERCE_CODE, process.env.TBK_KEY);
+
 /**
  * @swagger
  * /transbank/pay:

@@ -12,7 +12,7 @@ WebpayPlus.environment = process.env.TBK_ENVIRONMENT;
 
 // TBK producción
 router.use(function (req, res, next) {
-  WebpayPlus.configureForProduction(process.env.WPP_CC, process.env.WPP_KEY);
+  WebpayPlus.configureForProduction(process.env.TBK_COMMERCE_CODE, process.env.TBK_KEY);
   next();
 });
 

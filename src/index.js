@@ -66,6 +66,12 @@ app.use(cors());
 // Documentation
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+// TBK producción
+router.use(function (req, res, next) {
+  WebpayPlus.configureForProduction(process.env.WPP_CC, process.env.WPP_KEY);
+  next();
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/users.routes'));

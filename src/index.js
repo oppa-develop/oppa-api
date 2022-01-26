@@ -42,6 +42,10 @@ const swaggerOptions = {
       {
         url: "https://api.somosoppa.cl/api",
         description: 'Development server (online with test data).'
+      },
+      {
+        url: "https://api2.somosoppa.cl/api",
+        description: 'Production server (online with production data).'
       }
     ]
   },

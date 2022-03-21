@@ -368,7 +368,7 @@ console.log('scheduledService.state:', scheduledService.state)
     let state = null
     switch (scheduledService.state.toLowerCase()) {
       case 'terminado':
-        state = 'por pagar'
+        state = 'pagado'
         break
       case 'cancelado':
         state = 'cancelado'

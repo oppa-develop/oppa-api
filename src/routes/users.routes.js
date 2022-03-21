@@ -31,6 +31,7 @@ const upload = multer({
   storage
 }).single('image')
 
+
 /**
  * @swagger
  * /users/:
@@ -1000,7 +1001,7 @@ router.patch('/edit', upload, async (req, res) => {
     gender,
     birthdate: new Date(birthdate.split('-')[2] + '-' + birthdate.split('-')[1] + '-' + birthdate.split('-')[0]),
     updated_at: new Date(),
-    img_url: userImage ? `api/public/images/users/${userImage?.filename}` : null,
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}`: string
   }
 
   usersModel.editUser(userData)

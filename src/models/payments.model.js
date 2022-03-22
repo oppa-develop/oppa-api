@@ -82,7 +82,7 @@ paymentModel.getPaymentsByProviderId = async (provider_id) => {
     await conn.beginTransaction();
     const date = dayjs().startOf('month').format('YYYY-MM-DD');
     const date2 = dayjs().endOf('month').format('YYYY-MM-DD') + ' 23:59:59';
-    
+    //comentario de prueba
     const [payments] = await conn.query(`SELECT * FROM payments WHERE providers_provider_id = ? AND created_at >= ? AND created_at <= ? OR state = 'en proceso' OR state = 'por pagar' ORDER BY payment_id DESC;`, [provider_id, date, date2]);
 
     for await (const pay of payments) {

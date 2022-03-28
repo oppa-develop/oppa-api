@@ -51,6 +51,8 @@ chatsModel.saveMessage = async (message) => {
   return chatUsers
 }
 
-
+chatsModel.changeStateToInactiveByScheduledServicesId = async (scheduled_services_id) =>{
+  await pool.query("UPDATE chats INNER JOIN scheduled_services ON chats.scheduled_services_scheduled_services_id=scheduled_services.scheduled_services_id INNER JOIN users ON users.user_id=scheduled_services.clients_users_user_id SET chats.state = 'inactive' WHERE scheduled_services.scheduled_services_id = ?;",[scheduled_services_id]);
+}
 
 module.exports = chatsModel;

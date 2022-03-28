@@ -76,6 +76,45 @@ const chatsModel = require('../models/chats.model');
 
 /**
  * @swagger
+ * /chats/update-to-inactive-chat-by-scheduled-service-id/{scheduled_services_id}:
+ *  patch:
+ *    tags:
+ *    - name: chats
+ *    description: Update chat's state to inactive for the given scheduled_services_id
+ *    parameters:
+ *    - in: path
+ *      name: scheduled_services_id
+ *      schema:
+ *        type: integer
+ *        example: 1
+ *    responses:
+ *      '200':
+ *        description: Update chat's state to inactive for the given scheduled_services_id.
+ */
+
+router.patch('/update-to-inactive-chat-by-scheduled-service-id/:scheduled_services_id', async (req,res) => {
+
+const {scheduled_services_id} = req.params
+
+  chatsModel.changeStateToInactiveByScheduledServicesId(scheduled_services_id)
+      .then(state => {
+        res.status(200).json({
+          success: true,
+          message: 'state updated to inactive.',
+          state
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          success: false,
+          message: err.message
+        });
+      });
+
+})
+
+/**
+ * @swagger
  * /chats/new-chat:
  *  post:
  *    tags:
@@ -145,5 +184,7 @@ router.post('/new-chat', async (req, res) => {
       });
     });
 });
+
+
 
 module.exports = router;

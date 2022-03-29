@@ -26,7 +26,7 @@ chatsModel.createChat = async (newChat, users_ids) => {
     if (conn) await conn.release();
   }
 }
-
+//
 chatsModel.getChatsByUserId = async (user_id) => {
   const [chats] = await pool.query("SELECT chats.* FROM chats INNER JOIN users_has_chats ON users_has_chats.chats_chat_id = chats.chat_id WHERE users_user_id = ? ORDER BY chats.created_at desc;", [user_id]);
   /* const [last_msg] = await pool.query("SELECT * FROM messages WHERE chats_chat_id = ? ORDER BY message_id DESC LIMIT 1", [chats[0].chat_id]);

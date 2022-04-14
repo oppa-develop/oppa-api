@@ -110,7 +110,6 @@ const {scheduled_services_id} = req.params
           message: err.message
         });
       });
-
 })
 
 /**

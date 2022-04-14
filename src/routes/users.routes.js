@@ -968,6 +968,9 @@ router.post('/add-senior', /*  verifyRole.teacher, */ async (req, res) => {
  *              gender:
  *                type: string
  *                example: hombre
+ *              phone:
+ *                type: string
+ *                example: "+56912345678"
  *              birthdate:
  *                type: date
  *                example: 1993-08-17
@@ -991,6 +994,7 @@ router.patch('/edit', upload, async (req, res) => {
     firstname,
     lastname,
     gender,
+    phone,
     birthdate
   } = req.body;
   const userImage = req.file
@@ -999,9 +1003,10 @@ router.patch('/edit', upload, async (req, res) => {
     firstname,
     lastname,
     gender,
+    phone,
     birthdate: new Date(birthdate.split('-')[2] + '-' + birthdate.split('-')[1] + '-' + birthdate.split('-')[0]),
     updated_at: new Date(),
-    img_url: userImage ? `api/public/images/users/${userImage?.filename}`: string
+    img_url: userImage ? `api/public/images/users/${userImage?.filename}`: null
   }
 
   usersModel.editUser(userData)

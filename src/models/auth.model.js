@@ -115,11 +115,11 @@ authModel.genPassCode = async (rut) => {
   let conn = null
   let supplicantUser = null;
   let userFound = null;
-  console.log({rut})
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    let [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE rut = ?;', [rut]);
+    const [user] = await conn.query('SELECT admin_id, client_id, provider_id, users.*, (SELECT total FROM wallet_movements WHERE users_user_id = users.user_id ORDER BY wallet_movements.created_at DESC LIMIT 1) as credit FROM users LEFT JOIN admins ON admins.users_user_id = user_id LEFT JOIN clients ON clients.users_user_id = user_id LEFT JOIN providers ON providers.users_user_id = user_id WHERE rut = ?;', [rut.rut]);
+    console.log(user[0])
     supplicantUser = user[0];
     console.log({supplicantUser});
     if (!supplicantUser?.email) {
@@ -128,8 +128,7 @@ authModel.genPassCode = async (rut) => {
     }
 
     const code = Math.random().toString(36).slice(2);
-
-    await conn.query('UPDATE users SET code = ? WHERE rut = ?;', [code, rut]);
+    await conn.query('UPDATE users SET code = ? WHERE rut = ?', [code, rut.rut]);
     
     return [supplicantUser, userFound, code]
   } catch (error) {
@@ -145,6 +144,7 @@ authModel.changePassword = async (rut, code, password) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
+    console.log(rut)
     const [res] = await conn.query('SELECT code FROM users WHERE rut = ?', [rut]);
     if (res[0].code === code) {
       // encriptamos la password y la guardamos en la base de datos

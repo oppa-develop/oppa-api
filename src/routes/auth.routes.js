@@ -431,7 +431,7 @@ router.post('/login-admin', (req, res) => {
  *              type: string
  *              example: ejemplo@correo.cl.
  */
-router.post('/recover-account', (req, res) => {
+router.post('/recover-account/', (req, res) => {
   const {
     rut
   } = req.body;
@@ -440,7 +440,7 @@ router.post('/recover-account', (req, res) => {
     .then(([supplicantUser, userFound, code]) => { // supplicantUser = usuario al que se le cambiará la clave; si el elder no tiene email, entonces userFound es el usuario apadrinador, de lo contrario userFound = NULL.
       // enviamos el código al email del usuario y notificamos al front que se le ha enviado el código.
       const firstname = supplicantUser.firstname;
-      const lastName = supplicantUser.lastName;
+      const lastName = supplicantUser.lastname;
       const email = supplicantUser.email || userFound.email;
       const contentHTML = `<!doctype html>
       <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
@@ -668,9 +668,13 @@ router.post('/recover-account', (req, res) => {
       const transporter = nodemailer.createTransport({
         host: 'mail.somosoppa.cl',
         port: 587,
+        //465
+        //587
         secure: false,
         auth: {
+          //cuentas@somosoppa.cl
           user: 'cuentas@somosoppa.cl',
+          //0-TL8sa3~AZM
           pass: '0-TL8sa3~AZM',
         },
         tls: {

@@ -17,7 +17,20 @@ servicesModel.getServicesQuantityByState = async () => {
 servicesModel.getPotentialProviders = async (service_id, region, district, date, hour, gender) => {
 
   // buscamos todos los proveedores que ofrecen ese servicio actualmente
-  let [providers] = await pool.query(`SELECT MIN(admin_id) as 'admin_id', MIN(client_id) as 'client_id', MIN(provider_id) as 'provider_id', users.*, provider_has_services.services_service_id as 'provided_service_id' FROM users LEFT JOIN admins ON admins.users_user_id = user_id  LEFT JOIN clients ON clients.users_user_id = user_id  LEFT JOIN providers ON providers.users_user_id = user_id INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id WHERE provider_has_services.state = 'active' AND provider_has_services.services_service_id = ? GROUP BY providers.provider_id;`, [service_id]);
+  let [providers] = await pool.query(`SELECT (admin_id) as 'admin_id', MIN(client_id) as 'client_id', MIN(provider_id) as 'provider_id', users.*,
+  provider_has_services.services_service_id as 'provided_service_id' 
+  FROM users LEFT JOIN admins ON admins.users_user_id = user_id
+  LEFT JOIN clients ON clients.users_user_id = user_id
+  LEFT JOIN providers ON providers.users_user_id = user_id 
+  INNER JOIN provider_has_services ON providers.provider_id = provider_has_services.providers_provider_id
+  INNER JOIN locations ON provider_has_services_id = locations.provider_has_services_provider_has_services_id
+  WHERE provider_has_services.state = 'active'
+  AND provider_has_services.services_service_id = ?
+  AND provider_has_services.start <= ?
+  AND provider_has_services.end >= ?
+  AND locations.district = ?
+  AND instr(workable, REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(cast(dayofweek(?) as char), '6', 'v'), '1', 'l'), '2', 'm'), '3', 'x'), '4', 'j'), '5', 'v'), '7', 'd'))
+  GROUP BY providers.provider_id;`, [service_id, hour, hour, district, date]);
 
   return providers
 }

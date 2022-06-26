@@ -144,7 +144,6 @@ authModel.changePassword = async (rut, code, password) => {
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
-    console.log(rut)
     const [res] = await conn.query('SELECT code FROM users WHERE rut = ?', [rut]);
     if (res[0].code === code) {
       // encriptamos la password y la guardamos en la base de datos

@@ -5,7 +5,7 @@ const pool = require('../libs/database');
 let servicesModel = {};
 
 servicesModel.getServices = async () => {
-  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, services.state, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id`);
+  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, services.state, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE NOT services.state = 'eliminado por admin';`);
   return services
 }
 
@@ -337,7 +337,7 @@ servicesModel.getProvidersHasServices = async (service_id) => {
 
 servicesModel.getServicesOfferedByUserId = async (user_id) => {
   let i = 0;
-  const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE providers_provider_id = ?;", [user_id]);
+  const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE providers_provider_id = ? AND NOT services.state = 'eliminado por admin';", [user_id]);
   for await (let service of services) {
     const [locations] = await pool.query('SELECT * FROM locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
     services[i].locations = locations

@@ -1312,7 +1312,7 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
  *          schema:
  *            type: object
  *            properties:
- *              services_id:
+ *              service_id:
  *                type: integer
  *                example: 1
  *              state:

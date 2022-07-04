@@ -5,7 +5,7 @@ const pool = require('../libs/database');
 let servicesModel = {};
 
 servicesModel.getServices = async () => {
-  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, services.state, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id`);
+  const [services] = await pool.query(`SELECT service_id, services.title, services.description, price, services.img_url, category_id, services.state, categories.title as 'category_title', categories.description 'category_description', super_category_id, super_categories.title as 'super_category_title', super_categories.description as 'super_category_description', commission FROM services INNER JOIN categories ON categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE NOT services.state = 'eliminado por admin';`);
   return services
 }
 
@@ -42,14 +42,14 @@ servicesModel.getPotentialServices = async (potentialProviders, service_id, regi
     hour: false,
   }
   let potentialServices = []
-  
+
   return new Promise(async resolve => {
-    
+
     for await (let provider of potentialProviders) {
       // borramos la data sensible
       delete provider.password;
       delete provider.token;
-  
+
       const [provider_has_services] = await pool.query(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND (provider_has_services.gender = 'Unisex' OR provider_has_services.gender = ?);`, [provider.provider_id, service_id, gender]);
 
       console.log(pool.format(`SELECT * FROM provider_has_services WHERE provider_has_services.providers_provider_id = ? AND provider_has_services.services_service_id = ? AND provider_has_services.state = 'active' AND (provider_has_services.gender = 'Unisex' OR provider_has_services.gender = ?);`, [provider.provider_id, service_id, gender]))
@@ -58,7 +58,7 @@ servicesModel.getPotentialServices = async (potentialProviders, service_id, regi
         // obtenemos la locación definida por el proveedor para este servicio, filtrada por region, comuna y género
         const [location] = await pool.query(`SELECT * FROM locations WHERE locations.provider_has_services_provider_has_services_id = ? AND locations.region = ? AND (locations.district = ? OR locations.district IS NULL);`, [provider_has_service.provider_has_services_id, region, district]);
         provider_has_service.location = location;
-  
+
         // ahora filtramos por fecha
         let dateWeekNumber = dayjs(date).format('d');
         if (dateWeekNumber === '0') dateWeekNumber = 'd';
@@ -71,10 +71,10 @@ servicesModel.getPotentialServices = async (potentialProviders, service_id, regi
         if (provider_has_service.workable.includes(dateWeekNumber)) filters.date = true;
         // ahora filtramos por hora
         if (parseInt(hour.replace(':', '')) > parseInt(provider_has_service.start.replace(':', '')) && parseInt(hour.replace(':', '')) < parseInt(provider_has_service.end.replace(':', ''))) filters.hour = true;
-  
+
         // finalmente, comprobamos que todos los filtros sean true
         if (filters.date && filters.hour) potentialServices.push(provider_has_service)
-  
+
         // devolvemos los filtros a estado false
         filters.date = false;
         filters.hour = false;
@@ -92,7 +92,7 @@ servicesModel.requestService = async (data) => {
 
 servicesModel.editOfferedServiceState = async (service, districts, region) => {
   let conn = null;
-  
+
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -136,7 +136,7 @@ servicesModel.cancelRequest = async (id) => {
 
 servicesModel.scheduleService = async (scheduleData, registerPaymentData) => {
   let conn = null;
-  
+
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
@@ -337,7 +337,7 @@ servicesModel.getProvidersHasServices = async (service_id) => {
 
 servicesModel.getServicesOfferedByUserId = async (user_id) => {
   let i = 0;
-  const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE providers_provider_id = ?;", [user_id]);
+  const [services] = await pool.query("SELECT services.*, provider_has_services.*, super_categories.title as `super_category` FROM provider_has_services INNER JOIN services ON services.service_id = provider_has_services.services_service_id INNER JOIN categories ON services.categories_category_id = categories.category_id INNER JOIN super_categories ON categories.super_categories_super_category_id = super_categories.super_category_id WHERE providers_provider_id = ? AND NOT services.state = 'eliminado por admin';", [user_id]);
   for await (let service of services) {
     const [locations] = await pool.query('SELECT * FROM locations WHERE provider_has_services_provider_has_services_id = ?;', [service.provider_has_services_id]);
     services[i].locations = locations
@@ -357,14 +357,34 @@ servicesModel.rankService = async (data) => {
   return res
 }
 
+servicesModel.changeServiceState = async (service) => {
+
+  let conn = null;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    const [editedService] = await conn.query('UPDATE services SET state = ? WHERE service_id = ?', [service.state, service.service_id])
+    const [editedOfferedService] = await conn.query('UPDATE provider_has_services SET state = ? WHERE service_id = ?', [state, service.service_id])
+
+    await conn.commit();
+    return { editedService, editedOfferedService }
+  } catch (error) {
+    if (conn) await conn.rollback();
+    throw error;
+  } finally {
+    if (conn) await conn.release();
+  }
+}
+
 servicesModel.changeScheduleServiceState = async (scheduledService) => {
-  
+
   let conn = null;
   try {
     conn = await pool.getConnection();
     await conn.beginTransaction();
     const [res] = await conn.query('UPDATE scheduled_services SET state = ? WHERE scheduled_services_id = ?', [scheduledService.state, scheduledService.scheduled_services_id])
-console.log('scheduledService.state:', scheduledService.state)
+    console.log('scheduledService.state:', scheduledService.state)
     let state = null
     switch (scheduledService.state.toLowerCase()) {
       case 'terminado':
@@ -377,7 +397,7 @@ console.log('scheduledService.state:', scheduledService.state)
         state = 'en proceso'
         break
     }
-console.log('state:', state)
+    console.log('state:', state)
 
     if (state) await conn.query('UPDATE payments SET state = ? WHERE scheduled_services_scheduled_services_id = ?', [state, scheduledService.scheduled_services_id])
 

@@ -1301,6 +1301,53 @@ router.post('/provide-service', /* verifyRole.admin, */ async (req, res) => {
 
 /**
  * @swagger
+ * /services/change-state:
+ *  patch:
+ *    tags:
+ *    - name: services
+ *    description: To change the state of a service
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              service_id:
+ *                type: integer
+ *                example: 1
+ *              state:
+ *                type: string
+ *                example: 'active'
+ */
+router.patch('/change-state', async (req, res) => {
+  const {
+    service_id,
+    state
+  } = req.body
+  const service = {
+    state,
+    service_id
+  }
+
+  servicesModel.changeServiceState(service)
+    .then(service => {
+      res.status(200).json({
+        success: true,
+        message: 'Service edited successfully',
+        service
+      });
+    })
+    .catch(err => {
+      console.log({err})
+      res.status(500).json({
+        success: false,
+        message: err.code || err.message
+      });
+    });
+})
+
+/**
+ * @swagger
  * /services/scheduled/change-state:
  *  patch:
  *    tags:
